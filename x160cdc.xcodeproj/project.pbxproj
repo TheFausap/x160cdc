@@ -90,6 +90,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastUpgradeCheck = 1400;
+				ORGANIZATIONNAME = GITANES;
 				TargetAttributes = {
 					424B239B2901BA34003C9D8A = {
 						CreatedOnToolsVersion = 14.0.1;
@@ -97,7 +98,7 @@
 				};
 			};
 			buildConfigurationList = 424B23972901BA34003C9D8A /* Build configuration list for PBXProject "x160cdc" */;
-			compatibilityVersion = "Xcode 10.0";
+			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
