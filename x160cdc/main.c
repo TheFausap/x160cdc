@@ -51,6 +51,17 @@ FILE* ptape;
 
 FILE* dvc;
 
+void _set(int* d, int s)
+{
+    int i = 11;
+    
+    while(s != 0) {
+        d[i] = s%2;
+        s /= 2;
+        i--;
+    }
+}
+
 int hs(int a, int b, int* bo)
 {
     (*bo) = (!a) & b;
@@ -133,6 +144,7 @@ void adder(int* a, int* b, int op){
         bi = 0;
         for(int i=RS-1;i>=0;i--) {
             a[i] = fs(a[i],one[i],bi,&ovr);
+            bi = ovr;
         }
     }
 }
@@ -140,6 +152,7 @@ void adder(int* a, int* b, int op){
 void inc(int* a){
     int bi = 0;
     int one[] = {0,0,0,0,0,0,0,0,0,0,0,1};
+    int one1[] = {0,0,0,0,0,0,0,0,0,0,0,1};
     
     cp(one);
     for(int i=RS-1;i>=0;i--) {
@@ -149,7 +162,8 @@ void inc(int* a){
     if (ovr == 1) {
         bi = 0;
         for(int i=RS-1;i>=0;i--) {
-            a[i] = fs(a[i],one[i],bi,&ovr);
+            a[i] = fs(a[i],one1[i],bi,&ovr);
+            bi = ovr;
         }
     }
 }
@@ -177,6 +191,7 @@ void init(void)
     S = calloc(12,sizeof(int));
     F = calloc(6,sizeof(int));
     E = calloc(6,sizeof(int));
+    G = calloc(12,sizeof(int));
     Ap = calloc(12,sizeof(int));
     PSR = calloc(8,sizeof(int));
     Z = calloc(12,sizeof(int));
@@ -190,13 +205,14 @@ void init(void)
             mem[i][j] = calloc(12,sizeof(int));
         }
     }
+    B=0;I=0;R=0;D=0;
 }
 
-int to_num(int* b)
+int to_num(int* b, int l)
 {
     int r = 0;
     
-    for(int i=11,j=0;i>=0;i--,j++) {
+    for(int i=l-1,j=0;i>=0;i--,j++) {
         r += b[i] * pow(2,j);
     }
     
@@ -212,14 +228,14 @@ void set(int* d, int* s)
 void from_mem(int bl, int* d, int* s)
 {
     for(int i=0;i<RS;i++) {
-        d[i] = mem[bl][to_num(s)][i];
+        d[i] = mem[bl][to_num(s,12)][i];
     }
 }
 
 void to_mem(int bl, int* d, int* s)
 {
     for(int i=0;i<RS;i++) {
-        mem[bl][to_num(d)][i]=s[i];
+        mem[bl][to_num(d,12)][i]=s[i];
     }
 }
 
@@ -319,7 +335,7 @@ void op_cta(void)
 void op_stp(void)
 {
     for(int i=0;i<11;i++) {
-        mem[D][to_num(E)][i] = P[i];
+        mem[D][to_num(E,6)][i] = P[i];
     }
 }
 
@@ -336,14 +352,14 @@ void op_ldn(void)
 void op_ldd(void)
 {
     for(int i=0;i<11;i++) {
-        A[i] = mem[D][to_num(E)][i];
+        A[i] = mem[D][to_num(E,6)][i];
     }
 }
 
 void op_ldi(void)
 {
     int ad = 0;
-    ad = to_num(mem[D][to_num(E)]);
+    ad = to_num(mem[D][to_num(E,6)],12);
     
     for(int i=0;i<11;i++) {
         A[i] = mem[I][ad][i];
@@ -353,7 +369,7 @@ void op_ldi(void)
 void op_ldf(void)
 {
     int ad = 0;
-    ad = to_num(P) + to_num(E);
+    ad = to_num(P,12) + to_num(E,6);
     ad %= 07777;
     
     for(int i=0;i<11;i++) {
@@ -364,7 +380,7 @@ void op_ldf(void)
 void op_ldb(void)
 {
     int ad = 0;
-    ad = to_num(P) - to_num(E);
+    ad = to_num(P,12) - to_num(E,6);
     ad %= 07777;
     
     for(int i=0;i<11;i++) {
@@ -386,7 +402,7 @@ void op_ldc(void)
 
 void op_ldm(void)
 {
-    set(A,mem[I][to_num(G)]);
+    set(A,mem[I][to_num(G,12)]);
 }
 
 void op_lcn(void)
@@ -402,14 +418,14 @@ void op_lcn(void)
 void op_lcd(void)
 {
     for(int i=0;i<11;i++) {
-        A[i] = !mem[D][to_num(E)][i];
+        A[i] = !mem[D][to_num(E,6)][i];
     }
 }
 
 void op_lci(void)
 {
     int ad = 0;
-    ad = to_num(mem[D][to_num(E)]);
+    ad = to_num(mem[D][to_num(E,6)],12);
     
     for(int i=0;i<11;i++) {
         A[i] = !mem[I][ad][i];
@@ -419,7 +435,7 @@ void op_lci(void)
 void op_lcf(void)
 {
     int ad = 0;
-    ad = to_num(P) + to_num(E);
+    ad = to_num(P,12) + to_num(E,6);
     ad %= 07777;
     
     for(int i=0;i<11;i++) {
@@ -430,7 +446,7 @@ void op_lcf(void)
 void op_lcb(void)
 {
     int ad = 0;
-    ad = to_num(P) - to_num(E);
+    ad = to_num(P,12) - to_num(E,6);
     ad %= 07777;
     
     for(int i=0;i<11;i++) {
@@ -453,7 +469,7 @@ void op_lcc(void)
 
 void op_lcm(void)
 {
-    set(A,mem[I][to_num(G)]);
+    set(A,mem[I][to_num(G,12)]);
     cp(A);
 }
 
@@ -466,14 +482,14 @@ void op_ste(void)
 void op_std(void)
 {
     for(int i=0;i<11;i++) {
-        mem[D][to_num(E)][i] = A[i];
+        mem[D][to_num(E,6)][i] = A[i];
     }
 }
 
 void op_sti(void)
 {
     int ad = 0;
-    ad = to_num(mem[D][to_num(E)]);
+    ad = to_num(mem[D][to_num(E,6)],12);
     
     for(int i=0;i<11;i++) {
         mem[I][ad][i] = A[i];
@@ -483,7 +499,7 @@ void op_sti(void)
 void op_stf(void)
 {
     int ad = 0;
-    ad = to_num(P) + to_num(E);
+    ad = to_num(P,12) + to_num(E,6);
     ad %= 07777;
     
     for(int i=0;i<11;i++) {
@@ -494,7 +510,7 @@ void op_stf(void)
 void op_stb(void)
 {
     int ad = 0;
-    ad = to_num(P) - to_num(E);
+    ad = to_num(P,12) - to_num(E,6);
     ad %= 07777;
     
     for(int i=0;i<11;i++) {
@@ -516,13 +532,13 @@ void op_stc(void)
 
 void op_stm(void)
 {
-    set(mem[I][to_num(G)],A);
+    set(mem[I][to_num(G,12)],A);
 }
 
 void op_hwi(void)
 {
     int ad = 0;
-    ad = to_num(mem[D][to_num(E)]);
+    ad = to_num(mem[D][to_num(E,6)],12);
     
     for(int i=6;i<11;i++) {
         mem[I][ad][i] = A[i];
@@ -573,13 +589,13 @@ void op_adn(void)
 
 void op_add(void)
 {
-    adder(A,mem[D][to_num(E)],1);
+    adder(A,mem[D][to_num(E,6)],1);
 }
 
 void op_adi(void)
 {
     int ad = 0;
-    ad = to_num(mem[D][to_num(E)]);
+    ad = to_num(mem[D][to_num(E,6)],12);
     
     adder(A,mem[I][ad],1);
 }
@@ -587,7 +603,7 @@ void op_adi(void)
 void op_adf(void)
 {
     int ad = 0;
-    ad = to_num(P) + to_num(E);
+    ad = to_num(P,12) + to_num(E,6);
     ad %= 07777;
     
     adder(A,mem[R][ad],1);
@@ -596,7 +612,7 @@ void op_adf(void)
 void op_adb(void)
 {
     int ad = 0;
-    ad = to_num(P) - to_num(E);
+    ad = to_num(P,12) - to_num(E,6);
     ad %= 07777;
     
     adder(A,mem[R][ad],1);
@@ -614,7 +630,7 @@ void op_adc(void)
 
 void op_adm(void)
 {
-    adder(A,mem[I][to_num(G)],1);
+    adder(A,mem[I][to_num(G,12)],1);
 }
 
 void op_sbn(void)
@@ -629,13 +645,13 @@ void op_sbn(void)
 
 void op_sbd(void)
 {
-    adder(A,mem[D][to_num(E)],0);
+    adder(A,mem[D][to_num(E,6)],0);
 }
 
 void op_sbi(void)
 {
     int ad = 0;
-    ad = to_num(mem[D][to_num(E)]);
+    ad = to_num(mem[D][to_num(E,6)],12);
     
     adder(A,mem[I][ad],0);
 }
@@ -643,7 +659,7 @@ void op_sbi(void)
 void op_sbf(void)
 {
     int ad = 0;
-    ad = to_num(P) + to_num(E);
+    ad = to_num(P,12) + to_num(E,6);
     ad %= 07777;
     
     adder(A,mem[R][ad],0);
@@ -652,7 +668,7 @@ void op_sbf(void)
 void op_sbb(void)
 {
     int ad = 0;
-    ad = to_num(P) - to_num(E);
+    ad = to_num(P,12) - to_num(E,6);
     ad %= 07777;
     
     adder(A,mem[R][ad],0);
@@ -670,19 +686,19 @@ void op_sbc(void)
 
 void op_sbm(void)
 {
-    adder(A,mem[I][to_num(G)],0);
+    adder(A,mem[I][to_num(G,12)],0);
 }
 
 void op_rad(void)
 {
-    adder(A,mem[D][to_num(E)],1);
+    adder(A,mem[D][to_num(E,6)],1);
     to_mem(D, E, A);
 }
 
 void op_rai(void)
 {
     int ad = 0;
-    ad = to_num(mem[D][to_num(E)]);
+    ad = to_num(mem[D][to_num(E,6)],12);
     
     adder(A,mem[I][ad],1);
     to_mem(I,E,A);
@@ -691,7 +707,7 @@ void op_rai(void)
 void op_raf(void)
 {
     int ad = 0;
-    ad = to_num(P) + to_num(E);
+    ad = to_num(P,12) + to_num(E,6);
     ad %= 07777;
     
     adder(A,mem[R][ad],1);
@@ -701,7 +717,7 @@ void op_raf(void)
 void op_rab(void)
 {
     int ad = 0;
-    ad = to_num(P) - to_num(E);
+    ad = to_num(P,12) - to_num(E,6);
     ad %= 07777;
     
     adder(A,mem[R][ad],1);
@@ -722,13 +738,13 @@ void op_rac(void)
 
 void op_ram(void)
 {
-    adder(A,mem[I][to_num(G)],1);
+    adder(A,mem[I][to_num(G,12)],1);
     to_mem(I,G,A);
 }
 
 void op_aod(void)
 {
-    set(A,mem[D][to_num(E)]);
+    set(A,mem[D][to_num(E,6)]);
     inc(A);
     to_mem(D, E, A);
 }
@@ -736,7 +752,7 @@ void op_aod(void)
 void op_aoi(void)
 {
     int ad = 0;
-    ad = to_num(mem[D][to_num(E)]);
+    ad = to_num(mem[D][to_num(E,6)],12);
     
     set(A,mem[I][ad]);
     inc(A);
@@ -746,7 +762,7 @@ void op_aoi(void)
 void op_aof(void)
 {
     int ad = 0;
-    ad = to_num(P) + to_num(E);
+    ad = to_num(P,12) + to_num(E,6);
     ad %= 07777;
     
     set(A,mem[R][ad]);
@@ -757,7 +773,7 @@ void op_aof(void)
 void op_aob(void)
 {
     int ad = 0;
-    ad = to_num(P) - to_num(E);
+    ad = to_num(P,12) - to_num(E,6);
     ad %= 07777;
     
     set(A,mem[R][ad]);
@@ -781,7 +797,7 @@ void op_aoc(void)
 
 void op_aom(void)
 {
-    set(A,mem[I][to_num(G)]);
+    set(A,mem[I][to_num(G,12)]);
     inc(A);
     to_mem(I,G,A);
 }
@@ -790,11 +806,12 @@ void op_ls1(void)
 {
     int t = A[0];
     
-    A[0]= A[1]; A[1]= A[2];
-    A[3]= A[4]; A[4]= A[5];
-    A[6]= A[7]; A[7]= A[8];
-    A[9]=A[10];A[10]=A[11];
-    A[11]=t;
+    A[0]=A[1];A[1]=A[2];
+    A[2]=A[3];A[3]=A[4];
+    A[4]=A[5];A[5]=A[6];
+    A[6]=A[7];A[7]=A[8];
+    A[8]=A[9];A[9]=A[10];
+    A[10]=A[11];A[11]=t;
 }
 
 void op_ls2(void)
@@ -838,7 +855,7 @@ void op_rs2(void)
 
 void op_srd(void)
 {
-    set(A,mem[D][to_num(E)]);
+    set(A,mem[D][to_num(E,6)]);
     op_ls1();
     to_mem(D, E, A);
 }
@@ -846,7 +863,7 @@ void op_srd(void)
 void op_sri(void)
 {
     int ad = 0;
-    ad = to_num(mem[D][to_num(E)]);
+    ad = to_num(mem[D][to_num(E,6)],12);
     
     set(A,mem[I][ad]);
     op_ls1();
@@ -856,7 +873,7 @@ void op_sri(void)
 void op_srf(void)
 {
     int ad = 0;
-    ad = to_num(P) + to_num(E);
+    ad = to_num(P,12) + to_num(E,6);
     ad %= 07777;
     
     set(A,mem[R][ad]);
@@ -867,7 +884,7 @@ void op_srf(void)
 void op_srb(void)
 {
     int ad = 0;
-    ad = to_num(P) - to_num(E);
+    ad = to_num(P,12) - to_num(E,6);
     ad %= 07777;
     
     set(A,mem[R][ad]);
@@ -891,7 +908,7 @@ void op_src(void)
 
 void op_srm(void)
 {
-    set(A,mem[I][to_num(G)]);
+    set(A,mem[I][to_num(G,12)]);
     op_ls1();
     to_mem(I,G,A);
 }
@@ -908,13 +925,13 @@ void op_lpn(void)
 
 void op_lpd(void)
 {
-    lp(A,mem[D][to_num(E)]);
+    lp(A,mem[D][to_num(E,6)]);
 }
 
 void op_lpi(void)
 {
     int ad = 0;
-    ad = to_num(mem[D][to_num(E)]);
+    ad = to_num(mem[D][to_num(E,6)],12);
     
     lp(A,mem[I][ad]);
 }
@@ -922,7 +939,7 @@ void op_lpi(void)
 void op_lpf(void)
 {
     int ad = 0;
-    ad = to_num(P) + to_num(E);
+    ad = to_num(P,12) + to_num(E,6);
     ad %= 07777;
     
     lp(A,mem[R][ad]);
@@ -931,7 +948,7 @@ void op_lpf(void)
 void op_lpb(void)
 {
     int ad = 0;
-    ad = to_num(P) - to_num(E);
+    ad = to_num(P,12) - to_num(E,6);
     ad %= 07777;
     
     lp(A,mem[R][ad]);
@@ -949,7 +966,7 @@ void op_lpc(void)
 
 void op_lpm(void)
 {
-    lp(A,mem[I][to_num(G)]);
+    lp(A,mem[I][to_num(G,12)]);
 }
 
 void op_scn(void)
@@ -969,7 +986,7 @@ void op_scn(void)
 void op_scd(void)
 {
     for(int i=0;i<RS;i++) {
-        if(mem[D][to_num(E)][i] == 1) {
+        if(mem[D][to_num(E,6)][i] == 1) {
             A[i] = !A[i];
         }
     }
@@ -978,7 +995,7 @@ void op_scd(void)
 void op_sci(void)
 {
     int ad = 0;
-    ad = to_num(mem[D][to_num(E)]);
+    ad = to_num(mem[D][to_num(E,6)],12);
     
     for(int i=0;i<RS;i++) {
         if (mem[I][ad][i] == 1) {
@@ -990,7 +1007,7 @@ void op_sci(void)
 void op_scf(void)
 {
     int ad = 0;
-    ad = to_num(P) + to_num(E);
+    ad = to_num(P,12) + to_num(E,6);
     ad %= 07777;
     
     for(int i=0;i<RS;i++) {
@@ -1003,7 +1020,7 @@ void op_scf(void)
 void op_scb(void)
 {
     int ad = 0;
-    ad = to_num(P) - to_num(E);
+    ad = to_num(P,12) - to_num(E,6);
     ad %= 07777;
     
     for(int i=0;i<RS;i++) {
@@ -1034,7 +1051,7 @@ void op_scc(void)
 void op_scm(void)
 {
     for(int i=0;i<RS;i++) {
-        if (mem[I][to_num(G)][i] == 1) {
+        if (mem[I][to_num(G,12)][i] == 1) {
             A[i] = !A[i];
         }
     }
@@ -1164,7 +1181,7 @@ void op_njb(void)
 void op_jpi(void)
 {
     int ad = 0;
-    ad = to_num(mem[D][to_num(E)]);
+    ad = to_num(mem[D][to_num(E,6)],12);
     
     set(P,mem[R][ad]);
 }
@@ -1204,8 +1221,8 @@ void op_ibi()
     if (BFR_busy) {
         set(P,G);
     } else {
-        int bxr=to_num(BXR);
-        int ber=to_num(BER);
+        int bxr=to_num(BXR,12);
+        int ber=to_num(BER,12);
         for(int i=ber;i<=bxr;i++) {
             set(mem[B][i],BFR);
         }
@@ -1217,8 +1234,8 @@ void op_ibo()
     if (BFR_busy) {
         set(P,G);
     } else {
-        int bxr=to_num(BXR);
-        int ber=to_num(BER);
+        int bxr=to_num(BXR,12);
+        int ber=to_num(BER,12);
         for(int i=ber;i<=bxr;i++) {
             set(BFR,mem[B][i]);
         }
@@ -1233,8 +1250,8 @@ void op_inp()
     
     cpl(EE,E);
     adder(P,EE,1);
-    fwa = to_num(mem[R][to_num(P)]);
-    lwa = to_num(G);
+    fwa = to_num(mem[R][to_num(P,12)],12);
+    lwa = to_num(G,12);
     for(int i=fwa;i<=lwa;i++) {
         set(mem[I][i],rdd(dvc));
     }
@@ -1248,8 +1265,8 @@ void op_out()
     
     cpl(EE,E);
     adder(P,EE,1);
-    fwa = to_num(mem[R][to_num(P)]);
-    lwa = to_num(G);
+    fwa = to_num(mem[R][to_num(P,12)],12);
+    lwa = to_num(G,12);
     for(int i=fwa;i<=lwa;i++) {
         wrd(dvc,mem[I][i]);
     }
@@ -1259,7 +1276,7 @@ void op_exc(void)
 {
     int ret[] = {1,0,0,0,0,0,0,0,0,0,0,0}; // 4000
     
-    switch(to_num(G)) {
+    switch(to_num(G,12)) {
         case 04102:
             dvc = fopen("ptrdr.in","r");
             dvcstatus = 0;
@@ -1301,9 +1318,9 @@ void op_exc(void)
 void op_exf(void)
 {
     int ret[] = {1,0,0,0,0,0,0,0,0,0,0,0}; // 4000
-    int ad = to_num(P);
+    int ad = to_num(P,12);
     
-    ad += to_num(E);
+    ad += to_num(E,6);
     
     switch(ad) {
         case 04102:
@@ -1349,9 +1366,9 @@ void op_exf(void)
 void microcode(void)
 {
     readFE();
-    switch(to_num(F)) {
+    switch(to_num(F,6)) {
         case 0:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     op_err();
                     break;
@@ -1441,7 +1458,7 @@ void microcode(void)
             }
             break;
         case 1:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_bls();
@@ -1564,7 +1581,7 @@ void microcode(void)
             inc(P);
             break;
         case 011:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_lpm();
@@ -1576,7 +1593,7 @@ void microcode(void)
             }
             break;
         case 012:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_lpc();
@@ -1588,7 +1605,7 @@ void microcode(void)
             }
             break;
         case 013:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     op_lps();
                     inc(P);
@@ -1603,7 +1620,7 @@ void microcode(void)
             inc(P);
             break;
         case 015:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_scm();
@@ -1615,7 +1632,7 @@ void microcode(void)
             }
             break;
         case 016:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_scc();
@@ -1627,7 +1644,7 @@ void microcode(void)
             }
             break;
         case 017:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     op_scs();
                     inc(P);
@@ -1642,7 +1659,7 @@ void microcode(void)
             inc(P);
             break;
         case 021:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_ldm();
@@ -1654,7 +1671,7 @@ void microcode(void)
             }
             break;
         case 022:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_ldc();
@@ -1666,7 +1683,7 @@ void microcode(void)
             }
             break;
         case 023:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     op_lds();
                     inc(P);
@@ -1682,7 +1699,7 @@ void microcode(void)
             inc(P);
             break;
         case 025:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_lcm();
@@ -1695,7 +1712,7 @@ void microcode(void)
             }
             break;
         case 026:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_lcc();
@@ -1708,7 +1725,7 @@ void microcode(void)
             }
             break;
         case 027:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     op_lcs();
                     inc(P);
@@ -1724,7 +1741,7 @@ void microcode(void)
             inc(P);
             break;
         case 031:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_adm();
@@ -1737,7 +1754,7 @@ void microcode(void)
             }
             break;
         case 032:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_adc();
@@ -1750,7 +1767,7 @@ void microcode(void)
             }
             break;
         case 033:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     op_ads();
                     inc(P);
@@ -1766,7 +1783,7 @@ void microcode(void)
             inc(P);
             break;
         case 035:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_sbm();
@@ -1779,7 +1796,7 @@ void microcode(void)
             }
             break;
         case 036:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_sbc();
@@ -1792,7 +1809,7 @@ void microcode(void)
             }
             break;
         case 037:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     op_sbs();
                     inc(P);
@@ -1808,7 +1825,7 @@ void microcode(void)
             inc(P);
             break;
         case 041:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_stm();
@@ -1821,7 +1838,7 @@ void microcode(void)
             }
             break;
         case 042:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_stc();
@@ -1834,7 +1851,7 @@ void microcode(void)
             }
             break;
         case 043:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     op_sts();
                     inc(P);
@@ -1850,7 +1867,7 @@ void microcode(void)
             inc(P);
             break;
         case 045:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_srm();
@@ -1863,7 +1880,7 @@ void microcode(void)
             }
             break;
         case 046:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_src();
@@ -1876,7 +1893,7 @@ void microcode(void)
             }
             break;
         case 047:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     op_srs();
                     inc(P);
@@ -1892,7 +1909,7 @@ void microcode(void)
             inc(P);
             break;
         case 051:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_ram();
@@ -1905,7 +1922,7 @@ void microcode(void)
             }
             break;
         case 052:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_rac();
@@ -1918,7 +1935,7 @@ void microcode(void)
             }
             break;
         case 053:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     op_ras();
                     inc(P);
@@ -1934,7 +1951,7 @@ void microcode(void)
             inc(P);
             break;
         case 055:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_aom();
@@ -1947,7 +1964,7 @@ void microcode(void)
             }
             break;
         case 056:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_aoc();
@@ -1960,7 +1977,7 @@ void microcode(void)
             }
             break;
         case 057:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     op_aos();
                     inc(P);
@@ -1999,7 +2016,7 @@ void microcode(void)
             op_jpi();
             break;
         case 071:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_jpr();
@@ -2010,7 +2027,7 @@ void microcode(void)
             }
             break;
         case 072:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_ibi();
@@ -2024,7 +2041,7 @@ void microcode(void)
             }
             break;
         case 073:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_ibo();
@@ -2038,7 +2055,7 @@ void microcode(void)
             }
             break;
         case 075:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     readG();
                     op_exc();
@@ -2051,7 +2068,7 @@ void microcode(void)
             }
             break;
         case 076:
-            switch(to_num(E)) {
+            switch(to_num(E,6)) {
                 case 0:
                     op_ina();
                     inc(P);
@@ -2065,7 +2082,7 @@ void microcode(void)
                     inc(P);
             }
         case 077:
-            switch(to_num(E)) {
+            switch(to_num(E,7)) {
                 case 0:
                 case 077:
                     op_hlt();
@@ -2086,10 +2103,30 @@ void dump(void)
         printf("%d",P[i]);
 }
 
+void ldmp(char* fn)
+{
+    FILE* f=fopen(fn,"r");
+    char c;
+    int i = 0;
+    
+    if (f == NULL) {
+        printf("Cannot open memory file!\n");
+        exit(100);
+    }
+    
+    while((c=fgetc(f)) != EOF) {
+        if ((c != ' ') && (c != '\n')) {
+            mem[R][0100][i] = c - '0';
+            i++;
+        }
+    }
+}
+
 int main(int argc, const char * argv[]) {
     // insert code here...
     init();
     
+    /*
     // 000 000 110 011 (0063)
     A[0] = 0;  A[1] = 0;  A[2] = 0;
     A[3] = 0;  A[4] = 0;  A[5] = 0;
@@ -2101,6 +2138,11 @@ int main(int argc, const char * argv[]) {
     Z[3] = 0;  Z[4] = 0;  Z[5] = 0;
     Z[6] = 0;  Z[7] = 1;  Z[8] = 0;
     Z[9] = 0; Z[10] = 1; Z[11] = 1;
+    */
+    
+    ldmp("mem.dmp");
+    
+    _set(P,0100);
     
     while (is_hlt == 0) {
         microcode();

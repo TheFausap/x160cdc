@@ -25,6 +25,7 @@
 /* Begin PBXFileReference section */
 		F440AF9C2903032100382DA1 /* x160cdc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = x160cdc; sourceTree = BUILT_PRODUCTS_DIR; };
 		F440AF9F2903032100382DA1 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		F440AFA6290336FB00382DA1 /* mem.dmp */ = {isa = PBXFileReference; lastKnownFileType = text; path = mem.dmp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +58,7 @@
 		F440AF9E2903032100382DA1 /* x160cdc */ = {
 			isa = PBXGroup;
 			children = (
+				F440AFA6290336FB00382DA1 /* mem.dmp */,
 				F440AF9F2903032100382DA1 /* main.c */,
 			);
 			path = x160cdc;
