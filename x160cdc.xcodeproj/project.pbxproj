@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 53;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -97,7 +97,7 @@
 				};
 			};
 			buildConfigurationList = 424B23972901BA34003C9D8A /* Build configuration list for PBXProject "x160cdc" */;
-			compatibilityVersion = "Xcode 14.0";
+			compatibilityVersion = "Xcode 10.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -238,6 +238,7 @@
 		424B23A42901BA34003C9D8A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 47VS4676CV;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -248,6 +249,7 @@
 		424B23A52901BA34003C9D8A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 47VS4676CV;
 				ENABLE_HARDENED_RUNTIME = YES;
