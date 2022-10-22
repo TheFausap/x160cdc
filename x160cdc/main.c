@@ -87,6 +87,7 @@ void cp(int* a)
     }
 }
 
+
 void lp(int* a,int *b)
 {
     for(int i=0;i<RS;i++) {
@@ -225,17 +226,17 @@ void set(int* d, int* s)
         d[i] = s[i];
 }
 
-void from_mem(int bl, int* d, int* s)
+void from_mem(int bl, int* d, int* s, int l)
 {
     for(int i=0;i<RS;i++) {
-        d[i] = mem[bl][to_num(s,12)][i];
+        d[i] = mem[bl][to_num(s,l)][i];
     }
 }
 
-void to_mem(int bl, int* d, int* s)
+void to_mem(int bl, int* d, int l, int* s)
 {
     for(int i=0;i<RS;i++) {
-        mem[bl][to_num(d,12)][i]=s[i];
+        mem[bl][to_num(d,l)][i]=s[i];
     }
 }
 
@@ -243,7 +244,7 @@ void readFE(void)
 {
     int FE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     
-    from_mem(R,FE,P);
+    from_mem(R,FE,P,12);
     
     F[0]=FE[0];F[1]=FE[1];F[2]=FE[2];
     F[3]=FE[3];F[4]=FE[4];F[5]=FE[5];
@@ -255,7 +256,7 @@ void readFE(void)
 void readG(void)
 {
     inc(P);
-    from_mem(R,G,P);
+    from_mem(R,G,P,12);
 }
 
 void dump(void);
@@ -285,7 +286,7 @@ void op_bls(void)
         BFR_busy = 1;
         set(BFR,A);
         while (ne(BER,BXR)) {
-            to_mem(B,BER,BFR);
+            to_mem(B,BER,12,BFR);
             inc(BER);
         }
     }
@@ -344,14 +345,14 @@ void op_ldn(void)
     for(int i=0;i<6;i++) {
         A[i] = 0;
     }
-    for(int i=6;i<11;i++) {
-        A[i] = E[i];
+    for(int i=6;i<RS;i++) {
+        A[i] = E[i-6];
     }
 }
 
 void op_ldd(void)
 {
-    for(int i=0;i<11;i++) {
+    for(int i=0;i<RS;i++) {
         A[i] = mem[D][to_num(E,6)][i];
     }
 }
@@ -361,7 +362,7 @@ void op_ldi(void)
     int ad = 0;
     ad = to_num(mem[D][to_num(E,6)],12);
     
-    for(int i=0;i<11;i++) {
+    for(int i=0;i<RS;i++) {
         A[i] = mem[I][ad][i];
     }
 }
@@ -372,7 +373,7 @@ void op_ldf(void)
     ad = to_num(P,12) + to_num(E,6);
     ad %= 07777;
     
-    for(int i=0;i<11;i++) {
+    for(int i=0;i<RS;i++) {
         A[i] = mem[R][ad][i];
     }
 }
@@ -383,14 +384,14 @@ void op_ldb(void)
     ad = to_num(P,12) - to_num(E,6);
     ad %= 07777;
     
-    for(int i=0;i<11;i++) {
+    for(int i=0;i<RS;i++) {
         A[i] = mem[R][ad][i];
     }
 }
 
 void op_lds(void)
 {
-    for(int i=0;i<11;i++) {
+    for(int i=0;i<RS;i++) {
         A[i] = mem[0][07777][i];
     }
 }
@@ -410,14 +411,14 @@ void op_lcn(void)
     for(int i=0;i<6;i++) {
         A[i] = 0;
     }
-    for(int i=6;i<11;i++) {
-        A[i] = !E[i];
+    for(int i=6;i<RS;i++) {
+        A[i] = !E[i-6];
     }
 }
 
 void op_lcd(void)
 {
-    for(int i=0;i<11;i++) {
+    for(int i=0;i<RS;i++) {
         A[i] = !mem[D][to_num(E,6)][i];
     }
 }
@@ -427,7 +428,7 @@ void op_lci(void)
     int ad = 0;
     ad = to_num(mem[D][to_num(E,6)],12);
     
-    for(int i=0;i<11;i++) {
+    for(int i=0;i<RS;i++) {
         A[i] = !mem[I][ad][i];
     }
 }
@@ -438,7 +439,7 @@ void op_lcf(void)
     ad = to_num(P,12) + to_num(E,6);
     ad %= 07777;
     
-    for(int i=0;i<11;i++) {
+    for(int i=0;i<RS;i++) {
         A[i] = !mem[R][ad][i];
     }
 }
@@ -449,14 +450,14 @@ void op_lcb(void)
     ad = to_num(P,12) - to_num(E,6);
     ad %= 07777;
     
-    for(int i=0;i<11;i++) {
+    for(int i=0;i<RS;i++) {
         A[i] = !mem[R][ad][i];
     }
 }
 
 void op_lcs(void)
 {
-    for(int i=0;i<11;i++) {
+    for(int i=0;i<RS;i++) {
         A[i] = !mem[0][07777][i];
     }
 }
@@ -475,13 +476,13 @@ void op_lcm(void)
 
 void op_ste(void)
 {
-    to_mem(D,E,BER);
+    to_mem(D,E,6,BER);
     set(BER,A);
 }
 
 void op_std(void)
 {
-    for(int i=0;i<11;i++) {
+    for(int i=0;i<RS;i++) {
         mem[D][to_num(E,6)][i] = A[i];
     }
 }
@@ -491,7 +492,7 @@ void op_sti(void)
     int ad = 0;
     ad = to_num(mem[D][to_num(E,6)],12);
     
-    for(int i=0;i<11;i++) {
+    for(int i=0;i<RS;i++) {
         mem[I][ad][i] = A[i];
     }
 }
@@ -502,7 +503,7 @@ void op_stf(void)
     ad = to_num(P,12) + to_num(E,6);
     ad %= 07777;
     
-    for(int i=0;i<11;i++) {
+    for(int i=0;i<RS;i++) {
         mem[R][ad][i] = A[i];
     }
 }
@@ -513,14 +514,14 @@ void op_stb(void)
     ad = to_num(P,12) - to_num(E,6);
     ad %= 07777;
     
-    for(int i=0;i<11;i++) {
+    for(int i=0;i<RS;i++) {
         mem[R][ad][i] = A[i];
     }
 }
 
 void op_sts(void)
 {
-    for(int i=0;i<11;i++) {
+    for(int i=0;i<RS;i++) {
         mem[0][07777][i] = A[i];
     }
 }
@@ -540,7 +541,7 @@ void op_hwi(void)
     int ad = 0;
     ad = to_num(mem[D][to_num(E,6)],12);
     
-    for(int i=6;i<11;i++) {
+    for(int i=6;i<RS;i++) {
         mem[I][ad][i] = A[i];
     }
 }
@@ -581,8 +582,8 @@ void op_adn(void)
 {
     int t[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     
-    for(int i=6;i<11;i++) {
-        t[i] = E[i];
+    for(int i=6;i<RS;i++) {
+        t[i] = E[i-6];
     }
     adder(A,t,1);
 }
@@ -637,8 +638,8 @@ void op_sbn(void)
 {
     int t[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     
-    for(int i=6;i<11;i++) {
-        t[i] = E[i];
+    for(int i=6;i<RS;i++) {
+        t[i] = E[i-6];
     }
     adder(A,t,0);
 }
@@ -692,7 +693,7 @@ void op_sbm(void)
 void op_rad(void)
 {
     adder(A,mem[D][to_num(E,6)],1);
-    to_mem(D, E, A);
+    to_mem(D,E,6,A);
 }
 
 void op_rai(void)
@@ -701,7 +702,7 @@ void op_rai(void)
     ad = to_num(mem[D][to_num(E,6)],12);
     
     adder(A,mem[I][ad],1);
-    to_mem(I,E,A);
+    to_mem(I,E,6,A);
 }
 
 void op_raf(void)
@@ -739,14 +740,14 @@ void op_rac(void)
 void op_ram(void)
 {
     adder(A,mem[I][to_num(G,12)],1);
-    to_mem(I,G,A);
+    to_mem(I,G,12,A);
 }
 
 void op_aod(void)
 {
     set(A,mem[D][to_num(E,6)]);
     inc(A);
-    to_mem(D, E, A);
+    to_mem(D,E,6,A);
 }
 
 void op_aoi(void)
@@ -756,7 +757,7 @@ void op_aoi(void)
     
     set(A,mem[I][ad]);
     inc(A);
-    to_mem(I,E,A);
+    to_mem(I,E,6,A);
 }
 
 void op_aof(void)
@@ -799,7 +800,7 @@ void op_aom(void)
 {
     set(A,mem[I][to_num(G,12)]);
     inc(A);
-    to_mem(I,G,A);
+    to_mem(I,G,12,A);
 }
 
 void op_ls1(void)
@@ -857,7 +858,7 @@ void op_srd(void)
 {
     set(A,mem[D][to_num(E,6)]);
     op_ls1();
-    to_mem(D, E, A);
+    to_mem(D, E,6, A);
 }
 
 void op_sri(void)
@@ -867,7 +868,7 @@ void op_sri(void)
     
     set(A,mem[I][ad]);
     op_ls1();
-    to_mem(I,E,A);
+    to_mem(I,E,6,A);
 }
 
 void op_srf(void)
@@ -910,15 +911,15 @@ void op_srm(void)
 {
     set(A,mem[I][to_num(G,12)]);
     op_ls1();
-    to_mem(I,G,A);
+    to_mem(I,G,12,A);
 }
 
 void op_lpn(void)
 {
     int t[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     
-    for(int i=6;i<11;i++) {
-        t[i] = E[i];
+    for(int i=6;i<RS;i++) {
+        t[i] = E[i-6];
     }
     lp(A,t);
 }
@@ -974,10 +975,10 @@ void op_scn(void)
     int t[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     
     for(int i=6;i<RS;i++) {
-        t[i] = E[i];
+        t[i] = E[i-6];
     }
     for(int i=0;i<RS;i++) {
-        if (E[i] == 1) {
+        if (t[i] == 1) {
             A[i] = !A[i];
         }
     }
@@ -1111,8 +1112,11 @@ void op_zjf(void)
     int EE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     
     cpl(EE,E);
-    if(!ne(A,zr0))
+    if(!ne(A,zr0)) {
         adder(P,EE,1);
+    } else {
+        inc(P);
+    }
 }
 
 void op_nzf(void)
@@ -1120,8 +1124,11 @@ void op_nzf(void)
     int EE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     
     cpl(EE,E);
-    if(ne(A,zr0))
+    if(ne(A,zr0)) {
         adder(P,EE,1);
+    } else {
+        inc(P);
+    }
 }
 
 void op_pjf(void)
@@ -1129,8 +1136,11 @@ void op_pjf(void)
     int EE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     
     cpl(EE,E);
-    if(A[0] == 0)
+    if(A[0] == 0) {
         adder(P,EE,1);
+    } else {
+        inc(P);
+    }
 }
 
 void op_njf(void)
@@ -1138,8 +1148,11 @@ void op_njf(void)
     int EE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     
     cpl(EE,E);
-    if(A[0] == 1)
+    if(A[0] == 1) {
         adder(P,EE,1);
+    } else {
+        inc(P);
+    }
 }
 
 void op_zjb(void)
@@ -1147,8 +1160,11 @@ void op_zjb(void)
     int EE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     
     cpl(EE,E);
-    if(!ne(A,zr0))
+    if(!ne(A,zr0)) {
         adder(P,EE,0);
+    } else {
+        inc(P);
+    }
 }
 
 void op_nzb(void)
@@ -1156,8 +1172,11 @@ void op_nzb(void)
     int EE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     
     cpl(EE,E);
-    if(ne(A,zr0))
+    if(ne(A,zr0)) {
         adder(P,EE,0);
+    } else {
+        inc(P);
+    }
 }
 
 void op_pjb(void)
@@ -1165,8 +1184,11 @@ void op_pjb(void)
     int EE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     
     cpl(EE,E);
-    if(A[0] == 0)
+    if(A[0] == 0) {
         adder(P,EE,0);
+    } else {
+        inc(P);
+    }
 }
 
 void op_njb(void)
@@ -1174,8 +1196,11 @@ void op_njb(void)
     int EE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     
     cpl(EE,E);
-    if(A[0] == 1)
+    if(A[0] == 1) {
         adder(P,EE,0);
+    } else {
+        inc(P);
+    }
 }
 
 void op_jpi(void)
@@ -1191,7 +1216,7 @@ void op_jpr(void)
     int t[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     set(t,P);
     inc(t); inc(t);
-    to_mem(R,G,t);
+    to_mem(R,G,12,t);
     inc(G);
     set(P,G);
 }
@@ -1552,6 +1577,7 @@ void microcode(void)
                     inc(P);
                     break;
             }
+            break;
         case 2:
             op_lpn();
             inc(P);
@@ -1590,6 +1616,7 @@ void microcode(void)
                 default:
                     op_lpi();
                     inc(P);
+                    break;
             }
             break;
         case 012:
@@ -1602,6 +1629,7 @@ void microcode(void)
                 default:
                     op_lpf();
                     inc(P);
+                    break;
             }
             break;
         case 013:
@@ -1613,6 +1641,7 @@ void microcode(void)
                 default:
                     op_lpb();
                     inc(P);
+                    break;
             }
             break;
         case 014:
@@ -1629,6 +1658,7 @@ void microcode(void)
                 default:
                     op_sci();
                     inc(P);
+                    break;
             }
             break;
         case 016:
@@ -1641,6 +1671,7 @@ void microcode(void)
                 default:
                     op_scf();
                     inc(P);
+                    break;
             }
             break;
         case 017:
@@ -1652,6 +1683,7 @@ void microcode(void)
                 default:
                     op_scb();
                     inc(P);
+                    break;
             }
             break;
         case 020:
@@ -1668,6 +1700,7 @@ void microcode(void)
                 default:
                     op_ldi();
                     inc(P);
+                    break;
             }
             break;
         case 022:
@@ -1680,6 +1713,7 @@ void microcode(void)
                 default:
                     op_ldf();
                     inc(P);
+                    break;
             }
             break;
         case 023:
@@ -2081,6 +2115,7 @@ void microcode(void)
                     op_hwi();
                     inc(P);
             }
+            break;
         case 077:
             switch(to_num(E,7)) {
                 case 0:
@@ -2101,11 +2136,16 @@ void dump(void)
     printf("P ");
     for(int i=0;i<RS;i++)
         printf("%d",P[i]);
-    for(int i=192;i<256;i++) {
+    printf("\n");
+    for(int i=192,pos=1;i<256;i++,pos++) {
         for(int j=0;j<12;j++) {
             printf("%d",mem[I][i][j]);
         }
-        printf(" ");
+        if (pos%4 == 0) {
+            printf("\n");
+        } else {
+            printf(" ");
+        }
     }
 }
 
@@ -2122,7 +2162,8 @@ void ldmp(const char* fn)
     }
     
     printf("Opening %s...\n",fn);
-    printf("%d\n",0100+j);
+    printf("Memory locations used (octal)\n");
+    printf("%04o\n",0100+j);
     
     while((c=fgetc(f)) != EOF) {
         if ((c != ' ') && (c != '\n')) {
@@ -2131,11 +2172,14 @@ void ldmp(const char* fn)
             if ((i % 12) == 0) {
                 i = 0;
                 j++;
-                printf("%d\n",0100+j);
+                printf("%04o ",0100+j);
+                if (j%6 == 0) {
+                    printf("\n");
+                }
             }
         }
     }
-    printf("Done.\n");
+    printf("\nDone.\n");
 }
 
 int main(int argc, const char * argv[]) {
