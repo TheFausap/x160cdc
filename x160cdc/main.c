@@ -2101,25 +2101,41 @@ void dump(void)
     printf("P ");
     for(int i=0;i<RS;i++)
         printf("%d",P[i]);
+    for(int i=192;i<256;i++) {
+        for(int j=0;j<12;j++) {
+            printf("%d",mem[I][i][j]);
+        }
+        printf(" ");
+    }
 }
 
-void ldmp(char* fn)
+void ldmp(const char* fn)
 {
     FILE* f=fopen(fn,"r");
     char c;
     int i = 0;
+    int j = 0;
     
     if (f == NULL) {
         printf("Cannot open memory file!\n");
         exit(100);
     }
     
+    printf("Opening %s...\n",fn);
+    printf("%d\n",0100+j);
+    
     while((c=fgetc(f)) != EOF) {
         if ((c != ' ') && (c != '\n')) {
-            mem[R][0100][i] = c - '0';
+            mem[R][0100+j][i] = c - '0';
             i++;
+            if ((i % 12) == 0) {
+                i = 0;
+                j++;
+                printf("%d\n",0100+j);
+            }
         }
     }
+    printf("Done.\n");
 }
 
 int main(int argc, const char * argv[]) {
@@ -2140,9 +2156,13 @@ int main(int argc, const char * argv[]) {
     Z[9] = 0; Z[10] = 1; Z[11] = 1;
     */
     
-    ldmp("mem.dmp");
+    if (argc > 1) {
+        printf("Loading memory dmp...\n");
+        
+        ldmp(argv[1]);
     
-    _set(P,0100);
+        _set(P,0100);
+    }
     
     while (is_hlt == 0) {
         microcode();
