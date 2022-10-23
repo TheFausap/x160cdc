@@ -45,6 +45,10 @@ int on1[] = {0,0,0,0,0,0,0,0,0,0,0,1}; // +1
 int zr0[] = {0,0,0,0,0,0,0,0,0,0,0,0}; // +0
 int zr1[] = {1,1,1,1,1,1,1,1,1,1,1,1}; // -0
 
+int sw1;
+int sw2;
+int sw4;
+
 FILE* tape;
 FILE* prt;
 FILE* ptape;
@@ -117,7 +121,7 @@ int* rdd(FILE* d)
     int* t;
     t=calloc(12,sizeof(int));
     for(int i=0;i<RS;i++) {
-        t[i] = fgetc(d);
+        t[i] = fgetc(d)-'0';
     }
     
     return t;
@@ -127,7 +131,7 @@ int* rdd(FILE* d)
 void wrd(FILE* d, int* s)
 {
     for(int i=0;i<RS;i++) {
-        fputc(s[i],d);
+        fputc(s[i]+'0',d);
     }
 }
 
@@ -207,6 +211,7 @@ void init(void)
         }
     }
     B=0;I=0;R=0;D=0;
+    sw1=0;sw2=0;sw4=0;
 }
 
 int to_num(int* b, int l)
@@ -271,6 +276,7 @@ void op_err(void)
 void op_hlt(void)
 {
     is_hlt = 1;
+    dump();
 }
 
 void op_nop(void)
@@ -552,7 +558,7 @@ void op_ina(void)
         set(A,DW);
     } else {
         for(int i=0;i<RS;i++) {
-            A[i] = fgetc(dvc);
+            A[i] = fgetc(dvc)-'0';
         }
     }
 }
@@ -560,7 +566,7 @@ void op_ina(void)
 void op_ota(void)
 {
     for(int i=0;i<RS;i++) {
-        fputc(A[i],dvc);
+        fputc(A[i]+'0',dvc);
     }
 }
 
@@ -1296,6 +1302,13 @@ void op_out()
         wrd(dvc,mem[I][i]);
     }
 }
+
+void op_otn()
+{
+    int EE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
+    cpl(EE,E);
+    wrd(dvc,EE);
+}
             
 void op_exc(void)
 {
@@ -1387,6 +1400,178 @@ void op_exf(void)
     }
 }
 
+void op_sls()
+{
+    int sw = E[3]*4+E[4]*2+E[5];
+    
+    switch(sw) {
+        case 1:
+            if (sw1) is_hlt = 1;
+            break;
+        case 2:
+            if (sw2) is_hlt = 1;
+            break;
+        case 3:
+            if (sw1 || sw2) is_hlt = 1;
+            break;
+        case 4:
+            if (sw4) is_hlt = 1;
+            break;
+        case 5:
+            if (sw1 | sw4) is_hlt = 1;
+            break;
+        case 6:
+            if (sw2 | sw4) is_hlt = 1;
+            break;
+        case 7:
+            if (sw1 | sw2 | sw4) is_hlt = 1;
+            break;
+    }
+}
+
+void op_slj()
+{
+    int sw = E[0]*4+E[1]*2+E[2];
+    
+    switch(sw) {
+        case 1:
+            if (sw1) {
+                set(P,G);
+            } else {
+                inc(P);
+            }
+            break;
+        case 2:
+            if (sw2) {
+                set(P,G);
+            } else {
+                inc(P);
+            }
+            break;
+        case 3:
+            if (sw1 || sw2) {
+                set(P,G);
+            } else {
+                inc(P);
+            }
+            break;
+        case 4:
+            if (sw4) {
+                set(P,G);
+            } else {
+                inc(P);
+            }
+            break;
+        case 5:
+            if (sw1 | sw4) {
+                set(P,G);
+            } else {
+                inc(P);
+            }
+            break;
+        case 6:
+            if (sw2 | sw4) {
+                set(P,G);
+            } else {
+                inc(P);
+            }
+            break;
+        case 7:
+            if (sw1 | sw2 | sw4) {
+                set(P,G);
+            } else {
+                inc(P);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+void op_sjs()
+{
+    int sw = E[0]*4+E[1]*2+E[2];
+    
+    switch(sw) {
+        case 1:
+            if (sw1) {
+                set(P,G);
+            } else {
+                inc(P);
+            }
+            break;
+        case 2:
+            if (sw2) {
+                set(P,G);
+            } else {
+                inc(P);
+            }
+            break;
+        case 3:
+            if (sw1 || sw2) {
+                set(P,G);
+            } else {
+                inc(P);
+            }
+            break;
+        case 4:
+            if (sw4) {
+                set(P,G);
+            } else {
+                inc(P);
+            }
+            break;
+        case 5:
+            if (sw1 | sw4) {
+                set(P,G);
+            } else {
+                inc(P);
+            }
+            break;
+        case 6:
+            if (sw2 | sw4) {
+                set(P,G);
+            } else {
+                inc(P);
+            }
+            break;
+        case 7:
+            if (sw1 | sw2 | sw4) {
+                set(P,G);
+            } else {
+                inc(P);
+            }
+            break;
+        default:
+            break;
+    }
+    
+    sw = E[3]*4+E[4]*2+E[5];
+    
+    switch(sw) {
+        case 1:
+            if (sw1) is_hlt = 1;
+            break;
+        case 2:
+            if (sw2) is_hlt = 1;
+            break;
+        case 3:
+            if (sw1 || sw2) is_hlt = 1;
+            break;
+        case 4:
+            if (sw4) is_hlt = 1;
+            break;
+        case 5:
+            if (sw1 | sw4) is_hlt = 1;
+            break;
+        case 6:
+            if (sw2 | sw4) is_hlt = 1;
+            break;
+        case 7:
+            if (sw1 | sw2 | sw4) is_hlt = 1;
+            break;
+    }
+}
 
 void microcode(void)
 {
@@ -2088,6 +2273,10 @@ void microcode(void)
                     break;
             }
             break;
+        case 074:
+            op_otn();
+            inc(P);
+            break;
         case 075:
             switch(to_num(E,6)) {
                 case 0:
@@ -2117,14 +2306,55 @@ void microcode(void)
             }
             break;
         case 077:
-            switch(to_num(E,7)) {
+            switch(to_num(E,6)) {
                 case 0:
                 case 077:
                     op_hlt();
                     break;
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                    op_sls();
+                    inc(P);
+                    break;
+                case 010:
+                case 020:
+                case 030:
+                case 040:
+                case 050:
+                case 060:
+                case 070:
+                    readG();
+                    op_slj();
+                    break;
+                default:
+                    readG();
+                    op_sjs();
+                    break;
             }
             break;
     }
+}
+
+void _dmem(int bl, int s, int e)
+{
+    printf("Memory bank %d dump\n",bl);
+    for(int i=s,pos=1;i<e;i++,pos++) {
+        printf("[%04o]  ",i);
+        for(int j=0;j<12;j++) {
+            printf("%d",mem[bl][i][j]);
+        }
+        if (pos%4 == 0) {
+            printf("\n");
+        } else {
+            printf(" ");
+        }
+    }
+    printf(".\n");
 }
 
 void dump(void)
@@ -2137,17 +2367,8 @@ void dump(void)
     for(int i=0;i<RS;i++)
         printf("%d",P[i]);
     printf("\n");
-    for(int i=0100,pos=1;i<0700;i++,pos++) {
-        printf("[%04o]  ",i);
-        for(int j=0;j<12;j++) {
-            printf("%d",mem[I][i][j]);
-        }
-        if (pos%4 == 0) {
-            printf("\n");
-        } else {
-            printf(" ");
-        }
-    }
+    _dmem(0,050,0700);
+    _dmem(1,0100,07771);
 }
 
 void ldmp(const char* fn)
@@ -2201,20 +2422,6 @@ void ldmp(const char* fn)
 int main(int argc, const char * argv[]) {
     // insert code here...
     init();
-    
-    /*
-    // 000 000 110 011 (0063)
-    A[0] = 0;  A[1] = 0;  A[2] = 0;
-    A[3] = 0;  A[4] = 0;  A[5] = 0;
-    A[6] = 1;  A[7] = 1;  A[8] = 0;
-    A[9] = 0; A[10] = 1; A[11] = 1;
-    
-    // 000 000 010 011 (0023)
-    Z[0] = 0;  Z[1] = 0;  Z[2] = 0;
-    Z[3] = 0;  Z[4] = 0;  Z[5] = 0;
-    Z[6] = 0;  Z[7] = 1;  Z[8] = 0;
-    Z[9] = 0; Z[10] = 1; Z[11] = 1;
-    */
     
     if (argc > 1) {
         printf("Loading memory dmp...\n");
