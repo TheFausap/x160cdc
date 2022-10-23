@@ -273,10 +273,15 @@ void op_err(void)
     printf("\nERR\n");
 }
 
-void op_hlt(void)
+void op_hlt(int t)
 {
     is_hlt = 1;
     dump();
+    if (t == 0) {
+        printf("\n7700\n");
+    } else {
+        printf("\n7777\n");
+    }
 }
 
 void op_nop(void)
@@ -2308,8 +2313,10 @@ void microcode(void)
         case 077:
             switch(to_num(E,6)) {
                 case 0:
+                    op_hlt(0);
+                    break;
                 case 077:
-                    op_hlt();
+                    op_hlt(077);
                     break;
                 case 1:
                 case 2:
@@ -2367,7 +2374,7 @@ void dump(void)
     for(int i=0;i<RS;i++)
         printf("%d",P[i]);
     printf("\n");
-    _dmem(0,050,0700);
+    _dmem(0,0,0700);
     _dmem(1,0100,07771);
 }
 
