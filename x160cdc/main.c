@@ -2137,7 +2137,8 @@ void dump(void)
     for(int i=0;i<RS;i++)
         printf("%d",P[i]);
     printf("\n");
-    for(int i=192,pos=1;i<256;i++,pos++) {
+    for(int i=0100,pos=1;i<0700;i++,pos++) {
+        printf("[%04o]  ",i);
         for(int j=0;j<12;j++) {
             printf("%d",mem[I][i][j]);
         }
@@ -2155,6 +2156,9 @@ void ldmp(const char* fn)
     char c;
     int i = 0;
     int j = 0;
+    int org = 0;
+    int bl = 0;
+    int BOP = 0;
     
     if (f == NULL) {
         printf("Cannot open memory file!\n");
@@ -2163,23 +2167,35 @@ void ldmp(const char* fn)
     
     printf("Opening %s...\n",fn);
     printf("Memory locations used (octal)\n");
-    printf("%04o\n",0100+j);
     
     while((c=fgetc(f)) != EOF) {
-        if ((c != ' ') && (c != '\n')) {
-            mem[R][0100+j][i] = c - '0';
+        if (c == '#') {
+            bl = fgetc(f)-'0';
+            fgetc(f);
+            org = (fgetc(f)-'0') * 512 + (fgetc(f)-'0') * 64 +
+                    (fgetc(f)-'0') * 8 + (fgetc(f)-'0');
+            printf("%04o\n",org);
+        }
+        else if (c == '@') {
+            BOP = (fgetc(f)-'0') * 512 + (fgetc(f)-'0') * 64 +
+            (fgetc(f)-'0') * 8 + (fgetc(f)-'0');
+        }
+        else if ((c != ' ') && (c != '\n')) {
+            mem[bl][org+j][i] = c - '0';
             i++;
             if ((i % 12) == 0) {
                 i = 0;
                 j++;
-                printf("%04o ",0100+j);
+                printf("%04o ",org+j);
                 if (j%6 == 0) {
                     printf("\n");
                 }
             }
         }
     }
-    printf("\nDone.\n");
+    _set(P,BOP);
+    printf("\nP set to %04o",to_num(P,12));
+    printf("\nLoading completed.\n\n");
 }
 
 int main(int argc, const char * argv[]) {
@@ -2205,7 +2221,7 @@ int main(int argc, const char * argv[]) {
         
         ldmp(argv[1]);
     
-        _set(P,0100);
+        
     }
     
     while (is_hlt == 0) {
