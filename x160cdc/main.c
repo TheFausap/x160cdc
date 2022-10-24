@@ -330,7 +330,6 @@ void op_atx(void)
 void op_eta(void)
 {
     set(A,BER);
-    inc(P);
 }
 
 void op_cta(void)
@@ -341,7 +340,6 @@ void op_cta(void)
     A[8]=_D%2;_D/=2;A[7]=_D%2;_D/=2;A[6]=_D%2;
     A[5]=_I%2;_I/=2;A[4]=_I%2;_I/=2;A[3]=_I%2;
     A[2]=_R%2;_R/=2;A[1]=_R%2;_R/=2;A[0]=_R%2;
-    inc(P);
 }
 
 void op_stp(void)
@@ -420,7 +418,7 @@ void op_ldm(void)
 void op_lcn(void)
 {
     for(int i=0;i<6;i++) {
-        A[i] = 0;
+        A[i] = 1;
     }
     for(int i=6;i<RS;i++) {
         A[i] = !E[i-6];
@@ -876,6 +874,7 @@ void op_sri(void)
 {
     int ad = 0;
     ad = to_num(mem[D][to_num(E,6)],12);
+    ad %= 07777;
     
     set(A,mem[I][ad]);
     op_ls1();
@@ -927,7 +926,7 @@ void op_srm(void)
 
 void op_lpn(void)
 {
-    int t[] = {0,0,0,0,0,0,0,0,0,0,0,0};
+    int t[] = {1,1,1,1,1,1,0,0,0,0,0,0};
     
     for(int i=6;i<RS;i++) {
         t[i] = E[i-6];
@@ -944,6 +943,7 @@ void op_lpi(void)
 {
     int ad = 0;
     ad = to_num(mem[D][to_num(E,6)],12);
+    ad %= 07777;
     
     lp(A,mem[I][ad]);
 }
@@ -1240,19 +1240,19 @@ void op_jfi(void)
     adder(P,EE,1);
 }
 
-void op_cbc()
+void op_cbc(void)
 {
     // clear buffer controls
     // interrupt any I/O operation
     BFR_busy = 0;
 }
 
-void op_cil()
+void op_cil(void)
 {
     // clear interrupt lockout
 }
 
-void op_ibi()
+void op_ibi(void)
 {
     if (BFR_busy) {
         set(P,G);
@@ -1265,7 +1265,7 @@ void op_ibi()
     }
 }
 
-void op_ibo()
+void op_ibo(void)
 {
     if (BFR_busy) {
         set(P,G);
@@ -1278,7 +1278,7 @@ void op_ibo()
     }
 }
 
-void op_inp()
+void op_inp(void)
 {
     int EE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     int fwa = 0;
@@ -1293,7 +1293,7 @@ void op_inp()
     }
 }
 
-void op_out()
+void op_out(void)
 {
     int EE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     int fwa = 0;
@@ -1308,7 +1308,7 @@ void op_out()
     }
 }
 
-void op_otn()
+void op_otn(void)
 {
     int EE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     cpl(EE,E);
@@ -1405,7 +1405,7 @@ void op_exf(void)
     }
 }
 
-void op_sls()
+void op_sls(void)
 {
     int sw = E[3]*4+E[4]*2+E[5];
     
@@ -1434,7 +1434,7 @@ void op_sls()
     }
 }
 
-void op_slj()
+void op_slj(void)
 {
     int sw = E[0]*4+E[1]*2+E[2];
     
@@ -1493,7 +1493,7 @@ void op_slj()
     }
 }
 
-void op_sjs()
+void op_sjs(void)
 {
     int sw = E[0]*4+E[1]*2+E[2];
     
@@ -2427,15 +2427,11 @@ void ldmp(const char* fn)
 }
 
 int main(int argc, const char * argv[]) {
-    // insert code here...
     init();
     
     if (argc > 1) {
         printf("Loading memory dmp...\n");
-        
         ldmp(argv[1]);
-    
-        
     }
     
     while (is_hlt == 0) {
