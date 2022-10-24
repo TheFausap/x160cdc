@@ -137,18 +137,21 @@ void wrd(FILE* d, int* s)
 
 void adder(int* a, int* b, int op){
     int bi = 0;
-    int one[] = {0,0,0,0,0,0,0,0,0,0,0,1};
+    int bc[] = {0,0,0,0,0,0,0,0,0,0,0,0};
+    
+    for (int i=0;i<RS;i++) {
+        bc[i] = b[i];
+    }
     
     if (op)
-        cp(b);
+        cp(bc);
     for(int i=RS-1;i>=0;i--) {
-        a[i] = fs(a[i],b[i],bi,&ovr);
+        a[i] = fs(a[i],bc[i],bi,&ovr);
         bi = ovr;
     }
     if (ovr == 1) {
-        bi = 0;
         for(int i=RS-1;i>=0;i--) {
-            a[i] = fs(a[i],one[i],bi,&ovr);
+            a[i] = fs(a[i],zr0[i],bi,&ovr);
             bi = ovr;
         }
     }
@@ -157,7 +160,6 @@ void adder(int* a, int* b, int op){
 void inc(int* a){
     int bi = 0;
     int one[] = {0,0,0,0,0,0,0,0,0,0,0,1};
-    int one1[] = {0,0,0,0,0,0,0,0,0,0,0,1};
     
     cp(one);
     for(int i=RS-1;i>=0;i--) {
@@ -165,9 +167,8 @@ void inc(int* a){
         bi = ovr;
     }
     if (ovr == 1) {
-        bi = 0;
         for(int i=RS-1;i>=0;i--) {
-            a[i] = fs(a[i],one1[i],bi,&ovr);
+            a[i] = fs(a[i],zr0[0],bi,&ovr);
             bi = ovr;
         }
     }
@@ -926,7 +927,7 @@ void op_srm(void)
 
 void op_lpn(void)
 {
-    int t[] = {1,1,1,1,1,1,0,0,0,0,0,0};
+    int t[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     
     for(int i=6;i<RS;i++) {
         t[i] = E[i-6];
@@ -2350,7 +2351,7 @@ void microcode(void)
 void _dmem(int bl, int s, int e)
 {
     printf("Memory bank %d dump\n",bl);
-    for(int i=s,pos=1;i<e;i++,pos++) {
+    for(int i=s,pos=1;i<=e;i++,pos++) {
         printf("[%04o]  ",i);
         for(int j=0;j<12;j++) {
             printf("%d",mem[bl][i][j]);
@@ -2374,8 +2375,12 @@ void dump(void)
     for(int i=0;i<RS;i++)
         printf("%d",P[i]);
     printf("\n");
+    printf("S ");
+    for(int i=0;i<RS;i++)
+        printf("%d",mem[0][07777][i]);
+    printf("\n");
     _dmem(0,0,0700);
-    _dmem(1,0100,07771);
+    //_dmem(1,0100,07771);
 }
 
 void ldmp(const char* fn)
@@ -2434,7 +2439,18 @@ int main(int argc, const char * argv[]) {
         ldmp(argv[1]);
     }
     
+    
+    _set(A,0100);
+    
     while (is_hlt == 0) {
+        printf("A ");
+        for(int i=0;i<RS;i++)
+            printf("%d",A[i]);
+        printf("\n");
+        printf("P ");
+        for(int i=0;i<RS;i++)
+            printf("%d",P[i]);
+        printf("\n");
         microcode();
     }
     
