@@ -1235,10 +1235,11 @@ void op_jpr(void)
 
 void op_jfi(void)
 {
-    int EE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
+    int ad = 0;
+    ad = to_num(P,12) + to_num(E,6);
+    ad %= 07777;
     
-    cpl(EE,E);
-    adder(P,EE,1);
+    set(P,mem[R][ad]);
 }
 
 void op_cbc(void)
@@ -2367,15 +2368,19 @@ void _dmem(int bl, int s, int e)
 
 void dump(void)
 {
-    printf("A ");
+    printf("\n\nDUMPING MEMORY INFO\n");
+    printf("------- ------ ----\n");
+    printf("A  ");
     for(int i=0;i<RS;i++)
         printf("%d",A[i]);
     printf("\n");
     printf("P ");
+    printf("%d",R);
     for(int i=0;i<RS;i++)
         printf("%d",P[i]);
+    printf(" (%04o)",to_num(P,12));
     printf("\n");
-    printf("S ");
+    printf("S  ");
     for(int i=0;i<RS;i++)
         printf("%d",mem[0][07777][i]);
     printf("\n");
@@ -2408,6 +2413,7 @@ void ldmp(const char* fn)
             org = (fgetc(f)-'0') * 512 + (fgetc(f)-'0') * 64 +
                     (fgetc(f)-'0') * 8 + (fgetc(f)-'0');
             printf("%04o\n",org);
+            j = 0;
         }
         else if (c == '@') {
             BOP = (fgetc(f)-'0') * 512 + (fgetc(f)-'0') * 64 +
@@ -2440,17 +2446,19 @@ int main(int argc, const char * argv[]) {
     }
     
     
-    _set(A,0100);
+    //_set(A,0100);
     
     while (is_hlt == 0) {
-        printf("A ");
+        printf("A  ");
         for(int i=0;i<RS;i++)
             printf("%d",A[i]);
         printf("\n");
         printf("P ");
+        printf("%d",R);
         for(int i=0;i<RS;i++)
             printf("%d",P[i]);
-        printf("\n");
+        printf(" (%04o)",to_num(P,12));
+        printf("\n---\n");
         microcode();
     }
     
