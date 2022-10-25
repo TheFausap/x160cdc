@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <unistd.h>
+#include <string.h>
 
 int ovr;
 int is_hlt;
@@ -2501,7 +2503,7 @@ void _exe(void)
 }
 
 int main(int argc, const char * argv[]) {
-    char rsp;
+    char rsp[] = "";
     
     init();
     
@@ -2512,13 +2514,16 @@ int main(int argc, const char * argv[]) {
     
     while(1) {
         _exe();
+        fflush(stdout);
         printf("[c]ontinue or e[x]it? ");
-        scanf("%c",&rsp);
-        if (rsp == 'x') {
+        scanf("%s",rsp);
+        if (strcmp(rsp,"x") == 0) {
             break;
-        } else {
+        } else if (strcmp(rsp,"c") == 0) {
             inc(P);
             is_hlt = 0;
+        } else {
+            printf("[c]ontinue or e[x]it? ");
         }
     }
     
