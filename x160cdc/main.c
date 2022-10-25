@@ -186,6 +186,9 @@ int ne(int* a, int* b)
 
 void init(void)
 {
+    FILE* pa;
+    int t;
+    
     A = calloc(12,sizeof(int));
     P = calloc(12,sizeof(int));
     BER = calloc(12,sizeof(int));
@@ -211,8 +214,49 @@ void init(void)
             mem[i][j] = calloc(12,sizeof(int));
         }
     }
+    
     B=0;I=0;R=0;D=0;
     sw1=0;sw2=0;sw4=0;
+    
+    pa = fopen("config.ini","r");
+    
+    if (pa == NULL) {
+        printf("Proceeding without specific setup from the panel\n");
+    } else {
+        printf("Reading setup from the panel\n");
+        // config file format
+        // AAAA B I R D PPPP SW1 SW2 SW4
+        // reading A
+        t = (fgetc(pa)-'0')*512 + (fgetc(pa)-'0')*64 + (fgetc(pa)-'0')*8 +
+            (fgetc(pa)-'0');
+        _set(A,t);
+        // reading B
+        fgetc(pa);
+        B = fgetc(pa)-'0';
+        //reading I
+        fgetc(pa);
+        I = fgetc(pa)-'0';
+        // reading R
+        fgetc(pa);
+        R = fgetc(pa)-'0';
+        // reading D
+        fgetc(pa);
+        D = fgetc(pa)-'0';
+        // reading P
+        fgetc(pa);
+        t = (fgetc(pa)-'0')*512 + (fgetc(pa)-'0')*64 + (fgetc(pa)-'0')*8 +
+            (fgetc(pa)-'0');
+        _set(P,t);
+        // reading SW1
+        fgetc(pa);
+        sw1 = fgetc(pa)-'0';
+        // reading SW2
+        fgetc(pa);
+        sw2 = fgetc(pa)-'0';
+        // reading SW4
+        fgetc(pa);
+        sw4 = fgetc(pa)-'0';
+    }
 }
 
 int to_num(int* b, int l)
@@ -2373,6 +2417,7 @@ void dump(void)
     printf("A  ");
     for(int i=0;i<RS;i++)
         printf("%d",A[i]);
+    printf(" (%04o)",to_num(A,12));
     printf("\n");
     printf("P ");
     printf("%d",R);
@@ -2452,6 +2497,7 @@ int main(int argc, const char * argv[]) {
         printf("A  ");
         for(int i=0;i<RS;i++)
             printf("%d",A[i]);
+        printf(" (%04o)",to_num(A,12));
         printf("\n");
         printf("P ");
         printf("%d",R);
