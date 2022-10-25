@@ -2482,17 +2482,8 @@ void ldmp(const char* fn)
     printf("\nLoading completed.\n\n");
 }
 
-int main(int argc, const char * argv[]) {
-    init();
-    
-    if (argc > 1) {
-        printf("Loading memory dmp...\n");
-        ldmp(argv[1]);
-    }
-    
-    
-    //_set(A,0100);
-    
+void _exe(void)
+{
     while (is_hlt == 0) {
         printf("A  ");
         for(int i=0;i<RS;i++)
@@ -2506,6 +2497,29 @@ int main(int argc, const char * argv[]) {
         printf(" (%04o)",to_num(P,12));
         printf("\n---\n");
         microcode();
+    }
+}
+
+int main(int argc, const char * argv[]) {
+    char rsp;
+    
+    init();
+    
+    if (argc > 1) {
+        printf("Loading memory dmp...\n");
+        ldmp(argv[1]);
+    }
+    
+    while(1) {
+        _exe();
+        printf("[c]ontinue or e[x]it? ");
+        scanf("%c",&rsp);
+        if (rsp == 'x') {
+            break;
+        } else {
+            inc(P);
+            is_hlt = 0;
+        }
     }
     
     fclose(tape);
