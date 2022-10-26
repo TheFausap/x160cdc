@@ -2519,10 +2519,12 @@ int main(int argc, const char * argv[]) {
         scanf("%s",rsp);
         if (strcmp(rsp,"x") == 0) {
             break;
-        } else if (strcmp(rsp,"c") == 0) {
+        }
+        else if (strcmp(rsp,"c") == 0) {
             inc(P);
             is_hlt = 0;
-        } else {
+        }
+        else {
             printf("[c]ontinue or e[x]it? ");
         }
     }
