@@ -1413,13 +1413,18 @@ void op_exf(void)
     
     ad += to_num(E,6);
     
-    switch(ad) {
+    switch(to_num(mem[R][ad],12)) {
         case 04102:
             dvc = fopen("ptrdr.in","r");
             dvcstatus = 0;
             break;
         case 04104:
             dvc = fopen("ptpch.out","w");
+            dvcstatus = 0;
+            break;
+        case 04220:
+        case 04210:
+            dvc = fopen("typewriter","rw");
             dvcstatus = 0;
             break;
         case 0600:
@@ -1431,6 +1436,9 @@ void op_exf(void)
             } else {
                 set(DW,ret);
             }
+            break;
+        case 04240:
+            fprintf(dvc,"0000 - READY\n");
             break;
         case 0601:
             fprintf(dvc,"\n");
