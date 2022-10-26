@@ -10,6 +10,7 @@
 #include <math.h>
 #include <unistd.h>
 #include <string.h>
+#include <wchar.h>
 
 int ovr;
 int is_hlt;
@@ -51,6 +52,8 @@ int sw1;
 int sw2;
 int sw4;
 
+int UC = 0;
+
 FILE* tape;
 FILE* prt;
 FILE* ptape;
@@ -60,25 +63,30 @@ FILE* dvc;
 // 161 typewriter codes
 // LC is the octal value, UC is the octal value + 70 (dec)
 //                   0     1    2    3    4    5    6     7     8    9
-char typ161[] = {    0,   't', '=', 'o', ' ', 'h', 'n',  'm',   0,  'l', // 0
-                    'r',   0,  'i', 'p', 'c', 'v', 'e',  'z',  'd', 'b', // 1
+wchar_t typ161[] = { 0,   't', '=', 'o', ' ', 'h', 'n',  'm',   0,  'l', // 0
+                    'r',  'g', 'i', 'p', 'c', 'v', 'e',  'z',  'd', 'b', // 1
                     's',  'y', 'f', 'x', 'a', 'w', 'j',  '8',  'u', 'q', // 2
-                    'k',  '9', ',',  0,  '.',  0,  '/', '\n',  '+', 70,  // 3
-                    ';', '\t', '-',  0,   39,  0,  '0',   0,   '7','\b', // 4
+                    'k',  '9', ',',  0,  '.',  0,  '/', '\n',  '+', 370, // 3
+                    ';', '\t', '-',  0,   39,  0,  '0',  300,   '7','\b', // 4
                     '4',   0,  '3',  0,  '5',  0,  '2',   0,   '6',  0,  // 5
                     '1',   0,   0,   0,   0,   0,   0,    0,    0,   0,  // 6
-                     0,   'T','\\', 'O', ' ', 'H', 'N',  'M',   0,  'L', // 7
-                    'R',   0,  'I', 'P', 'C', 'V', 'E',  'Z',  'D', 'B', // 8
-                    'S',  'Y', 'F', 'X', 'A', 'W', 'J',  '@',  'U', 'Q', // 9
-                    'K',  '(', ',',  0,  '.',  0,  '?', '\n',  'o',  70, // 10
-                    ':',  '\t','_',  0,  '"',  0,  ')',   0,   '&','\b', // 11
-                    '$',  0,   '#',  0,  '%',  0,  '@',   0,   '^',  0,  // 12
+                     0,   'T', 269, 'O', ' ', 'H', 'N',  'M',   0,  'L', // 7
+                    'R',  'G', 'I', 'P', 'C', 'V', 'E',  'Z',  'D', 'B', // 8
+                    'S',  'Y', 'F', 'X', 'A', 'W', 'J',  189,  'U', 'Q', // 9
+                    'K',  '(', ',',  0,  '.',  0,  '?', '\n',  176,  70, // 10
+                    ':',  '\t','_',  0,  '"',  0,  ')',   0,   '&', 127, // 11
+                    '$',  0,   '#',  0,  '%',  0,  '@',   0,   162,  0,  // 12
                     '*'
 };
 
+int typ161i[371] = { 0, };
+
 void _set(int* d, int s)
 {
-    int i = 11;
+    int i = RS-1;
+    
+    for(int i=0;i<RS;i++)
+        d[i] = 0;
     
     while(s != 0) {
         d[i] = s%2;
@@ -136,14 +144,26 @@ void cpu(int*d, int* s)
     }
 }
 
+int to_num(int*, int);
+
 // read one word from the device d
 int* rdd(FILE* d)
 {
     int* t;
+    int v;
+    
     t=calloc(12,sizeof(int));
     for(int i=0;i<RS;i++) {
         t[i] = fgetc(d)-'0';
     }
+    
+    v = to_num(t,12);
+    if (v > 61) {
+        v -= 60;
+    }
+    
+    v = typ161i[v];
+    _set(t,v);
     
     return t;
 }
@@ -151,9 +171,17 @@ int* rdd(FILE* d)
 // write one word to the device d
 void wrd(FILE* d, int* s)
 {
-    for(int i=0;i<RS;i++) {
-        fputc(s[i]+'0',d);
+    wchar_t c;
+    
+    c = to_num(s,12);
+    if (typ161[c] == 370) {
+        UC = 70;
+    } else if (typ161[c] == 300) {
+        UC = 0;
+    } else {
+        fwprintf(d,L"%lc", typ161[UC+c]);
     }
+    fflush(d);
 }
 
 void adder(int* a, int* b, int op){
@@ -238,6 +266,14 @@ void init(void)
     
     B=0;I=0;R=0;D=0;
     sw1=0;sw2=0;sw4=0;
+    
+    typ161i[' '] = 4; typ161i[' '] = 4;
+    typ161i['a'] = 030; typ161i['A'] = 030;
+    typ161i['b'] = 023;
+    typ161i['c'] = 016;
+    typ161i['d'] = 022;
+    typ161i['e'] = 020;
+    typ161i['f'] = 026;
     
     pa = fopen("config.ini","r");
     
@@ -1347,13 +1383,14 @@ void op_ibo(void)
 
 void op_inp(void)
 {
-    int EE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     int fwa = 0;
     int lwa = 0;
     
-    cpl(EE,E);
-    adder(P,EE,1);
-    fwa = to_num(mem[R][to_num(P,12)],12);
+    int ad = 0;
+    ad = to_num(P,12) + to_num(E,6) - 1;
+    ad %= 07777;
+    
+    fwa = to_num(mem[R][ad],12);
     lwa = to_num(G,12);
     for(int i=fwa;i<=lwa;i++) {
         set(mem[I][i],rdd(dvc));
@@ -1362,17 +1399,19 @@ void op_inp(void)
 
 void op_out(void)
 {
-    int EE[] = {0,0,0,0,0,0,0,0,0,0,0,0};
     int fwa = 0;
     int lwa = 0;
     
-    cpl(EE,E);
-    adder(P,EE,1);
-    fwa = to_num(mem[R][to_num(P,12)],12);
+    int ad = 0;
+    ad = to_num(P,12) + to_num(E,6) - 1;
+    ad %= 07777;
+    
+    fwa = to_num(mem[R][ad],12);
     lwa = to_num(G,12);
     for(int i=fwa;i<=lwa;i++) {
         wrd(dvc,mem[I][i]);
     }
+    fflush(dvc);
 }
 
 void op_otn(void)
@@ -1407,7 +1446,7 @@ void op_exc(void)
             dvcstatus = 0;
             break;
         case 04240:
-            fprintf(dvc,"0000 - READY\n");
+            fwprintf(dvc,L"0000 - READY\n");
             break;
         case 0600:
             if (dvc != NULL)
@@ -1465,7 +1504,7 @@ void op_exf(void)
         case 04210:
             if (dvc != NULL)
                 fclose(dvc);
-            dvc = fopen("typewriter","w+");
+            dvc = fopen("typewriter","a+");
             dvcstatus = 0;
             break;
         case 0600:
@@ -1481,7 +1520,7 @@ void op_exf(void)
             }
             break;
         case 04240:
-            fprintf(dvc,"0000 - READY\n");
+            fwprintf(dvc,L"0000 - READY\n");
             break;
         case 0601:
             fprintf(dvc,"\n");
