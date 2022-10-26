@@ -57,6 +57,25 @@ FILE* ptape;
 
 FILE* dvc;
 
+// 161 typewriter codes
+// LC is the octal value, UC is the octal value + 70 (dec)
+//                   0     1    2    3    4    5    6     7     8    9
+char typ161[] = {    0,   't', '=', 'o', ' ', 'h', 'n',  'm',   0,  'l', // 0
+                    'r',   0,  'i', 'p', 'c', 'v', 'e',  'z',  'd', 'b', // 1
+                    's',  'y', 'f', 'x', 'a', 'w', 'j',  '8',  'u', 'q', // 2
+                    'k',  '9', ',',  0,  '.',  0,  '/', '\n',  '+', 70,  // 3
+                    ';', '\t', '-',  0,   39,  0,  '0',   0,   '7','\b', // 4
+                    '4',   0,  '3',  0,  '5',  0,  '2',   0,   '6',  0,  // 5
+                    '1',   0,   0,   0,   0,   0,   0,    0,    0,   0,  // 6
+                     0,   'T','\\', 'O', ' ', 'H', 'N',  'M',   0,  'L', // 7
+                    'R',   0,  'I', 'P', 'C', 'V', 'E',  'Z',  'D', 'B', // 8
+                    'S',  'Y', 'F', 'X', 'A', 'W', 'J',  '@',  'U', 'Q', // 9
+                    'K',  '(', ',',  0,  '.',  0,  '?', '\n',  'o',  70, // 10
+                    ':',  '\t','_',  0,  '"',  0,  ')',   0,   '&','\b', // 11
+                    '$',  0,   '#',  0,  '%',  0,  '@',   0,   '^',  0,  // 12
+                    '*'
+};
+
 void _set(int* d, int s)
 {
     int i = 11;
@@ -1369,15 +1388,31 @@ void op_exc(void)
     
     switch(to_num(G,12)) {
         case 04102:
+            if (dvc != NULL)
+                fclose(dvc);
             dvc = fopen("ptrdr.in","r");
             dvcstatus = 0;
             break;
         case 04104:
+            if (dvc != NULL)
+                fclose(dvc);
             dvc = fopen("ptpch.out","w");
             dvcstatus = 0;
             break;
+        case 04220:
+        case 04210:
+            if (dvc != NULL)
+                fclose(dvc);
+            dvc = fopen("typewriter","w+");
+            dvcstatus = 0;
+            break;
+        case 04240:
+            fprintf(dvc,"0000 - READY\n");
+            break;
         case 0600:
-            dvc = fopen("prt.out","rw");
+            if (dvc != NULL)
+                fclose(dvc);
+            dvc = fopen("prt.out","w+");
             dvcstatus = 1;
             if (dvc == NULL) {
                 set(DW,zr0);
@@ -1415,21 +1450,29 @@ void op_exf(void)
     
     switch(to_num(mem[R][ad],12)) {
         case 04102:
+            if (dvc != NULL)
+                fclose(dvc);
             dvc = fopen("ptrdr.in","r");
             dvcstatus = 0;
             break;
         case 04104:
+            if (dvc != NULL)
+                fclose(dvc);
             dvc = fopen("ptpch.out","w");
             dvcstatus = 0;
             break;
         case 04220:
         case 04210:
-            dvc = fopen("typewriter","rw");
+            if (dvc != NULL)
+                fclose(dvc);
+            dvc = fopen("typewriter","w+");
             dvcstatus = 0;
             break;
         case 0600:
         case 0607:
-            dvc = fopen("prt.out","rw");
+            if (dvc != NULL)
+                fclose(dvc);
+            dvc = fopen("prt.out","w+");
             dvcstatus = 1;
             if (dvc == NULL) {
                 set(DW,zr0);
@@ -2537,8 +2580,12 @@ int main(int argc, const char * argv[]) {
         }
     }
     
-    fclose(tape);
-    fclose(prt);
+    if (tape != NULL)
+        fclose(tape);
+    if (prt != NULL)
+        fclose(prt);
+    if (dvc != NULL)
+        fclose(dvc);
     
     return 0;
 }
