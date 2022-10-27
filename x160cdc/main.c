@@ -16,6 +16,8 @@ int ovr;
 int is_hlt;
 int BFR_busy = 0;
 int dvcstatus = 0;
+int ispch = 0;
+int istyp = 0;
 
 int* A;
 int* Z;
@@ -67,7 +69,7 @@ wchar_t typ161[] = { 0,   't', '=', 'o', ' ', 'h', 'n',  'm',   0,  'l', // 0
                     'r',  'g', 'i', 'p', 'c', 'v', 'e',  'z',  'd', 'b', // 1
                     's',  'y', 'f', 'x', 'a', 'w', 'j',  '8',  'u', 'q', // 2
                     'k',  '9', ',',  0,  '.',  0,  '/', '\n',  '+', 370, // 3
-                    ';', '\t', '-',  0,   39,  0,  '0',  300,   '7','\b', // 4
+                    ';', '\t', '-',  0,   39,  0,  '0',  300,  '7','\b', // 4
                     '4',   0,  '3',  0,  '5',  0,  '2',   0,   '6',  0,  // 5
                     '1',   0,   0,   0,   0,   0,   0,    0,    0,   0,  // 6
                      0,   'T', 269, 'O', ' ', 'H', 'N',  'M',   0,  'L', // 7
@@ -77,6 +79,15 @@ wchar_t typ161[] = { 0,   't', '=', 'o', ' ', 'h', 'n',  'm',   0,  'l', // 0
                     ':',  '\t','_',  0,  '"',  0,  ')',   0,   '&', 127, // 11
                     '$',  0,   '#',  0,  '%',  0,  '@',   0,   162,  0,  // 12
                     '*'
+};
+
+wchar_t pch11[] = {  0,   '1', '2', '3', '4', '5', '6',  '7',  '8', '9', // 0
+                    '0',  '=', '_',  0,   0,   0,  ' ',  '/',  'S', 'T', // 1
+                    'U',  'V', 'W', 'X', 'Y', 'Z',  0,   ',',  '(',  0,  // 2
+                     0,    0,  '-', 'J', 'K', 'L', 'M',  'N',  'O', 'P', // 3
+                    'Q',  'R',  0,  '$', '*',  0,   0,    0,   '+', 'A', // 4
+                    'B',  'C', 'D', 'E', 'F', 'G', 'H',  'I',   0,  '.', // 5
+                    ')'
 };
 
 int typ161i[371] = { 0, };
@@ -158,11 +169,16 @@ int* rdd(FILE* d)
     }
     
     v = to_num(t,12);
-    if (v > 61) {
-        v -= 60;
+    if (istyp) {
+        if (v > 61) {
+            v -= 60;
+        }
+        
+        v = typ161i[v];
+    } else {
+        v = pch11[v];
     }
     
-    v = typ161i[v];
     _set(t,v);
     
     return t;
@@ -178,8 +194,10 @@ void wrd(FILE* d, int* s)
         UC = 70;
     } else if (typ161[c] == 300) {
         UC = 0;
-    } else {
+    } else if (istyp) {
         fwprintf(d,L"%lc", typ161[UC+c]);
+    } else {
+        fprintf(d,"%c",pch11[c]);
     }
     fflush(d);
 }
@@ -267,13 +285,57 @@ void init(void)
     B=0;I=0;R=0;D=0;
     sw1=0;sw2=0;sw4=0;
     
-    typ161i[' '] = 4; typ161i[' '] = 4;
+    typ161i[' '] = 4;   typ161i[' '] = 4;
     typ161i['a'] = 030; typ161i['A'] = 030;
-    typ161i['b'] = 023;
-    typ161i['c'] = 016;
-    typ161i['d'] = 022;
-    typ161i['e'] = 020;
-    typ161i['f'] = 026;
+    typ161i['b'] = 023; typ161i['B'] = 023;
+    typ161i['c'] = 016; typ161i['C'] = 016;
+    typ161i['d'] = 022; typ161i['D'] = 022;
+    typ161i['e'] = 020; typ161i['E'] = 020;
+    typ161i['f'] = 026; typ161i['F'] = 026;
+    typ161i['g'] = 013; typ161i['G'] = 013;
+    typ161i['h'] = 5; typ161i['H'] = 5;
+    typ161i['i'] = 014; typ161i['I'] = 014;
+    typ161i['j'] = 032; typ161i['J'] = 032;
+    typ161i['k'] = 036; typ161i['K'] = 036;
+    typ161i['l'] = 011; typ161i['L'] = 011;
+    typ161i['m'] = 7; typ161i['M'] = 7;
+    typ161i['n'] = 6; typ161i['N'] = 6;
+    typ161i['o'] = 3; typ161i['O'] = 3;
+    typ161i['p'] = 015; typ161i['P'] = 015;
+    typ161i['q'] = 035; typ161i['Q'] = 035;
+    typ161i['r'] = 012; typ161i['R'] = 012;
+    typ161i['s'] = 024; typ161i['S'] = 024;
+    typ161i['t'] = 1; typ161i['T'] = 1;
+    typ161i['u'] = 034; typ161i['U'] = 034;
+    typ161i['v'] = 017; typ161i['V'] = 017;
+    typ161i['w'] = 031; typ161i['W'] = 031;
+    typ161i[127] = 061; //BACKSPACE
+    typ161i[300] = 057; //LC
+    typ161i['x'] = 027; typ161i['X'] = 027;
+    typ161i['y'] = 025; typ161i['Y'] = 025;
+    typ161i['z'] = 021; typ161i['Z'] = 021;
+    typ161i['0'] = 056; typ161i[')'] = 056;
+    typ161i['1'] = 074; typ161i['*'] = 074;
+    typ161i['2'] = 070; typ161i['@'] = 070;
+    typ161i['3'] = 064; typ161i['#'] = 064;
+    typ161i['4'] = 062; typ161i['$'] = 062;
+    typ161i['5'] = 066; typ161i['%'] = 066;
+    typ161i['6'] = 072; typ161i[162] = 072;
+    typ161i['7'] = 060; typ161i['&'] = 060;
+    typ161i['8'] = 033; typ161i[189] = 033;
+    typ161i['9'] = 037; typ161i['('] = 037;
+    typ161i['-'] = 052; typ161i['_'] = 052;
+    typ161i['/'] = 044; typ161i['?'] = 044;
+    typ161i[39] = 054; typ161i['"'] = 054;
+    typ161i['+'] = 046; typ161i[176] = 046;
+    typ161i['.'] = 042;
+    typ161i[';'] = 050; typ161i[':'] = 050;
+    typ161i[','] = 040;
+    typ161i['='] = 2; typ161i[247] = 2;
+    typ161i['\t'] = 051;
+    typ161i[' '] = 4;
+    typ161i['\n'] = 045;
+    typ161i[370] = 047;
     
     pa = fopen("config.ini","r");
     
@@ -1437,6 +1499,8 @@ void op_exc(void)
                 fclose(dvc);
             dvc = fopen("ptpch.out","w");
             dvcstatus = 0;
+            istyp = 0;
+            ispch = 1;
             break;
         case 04220:
         case 04210:
@@ -1444,15 +1508,20 @@ void op_exc(void)
                 fclose(dvc);
             dvc = fopen("typewriter","w+");
             dvcstatus = 0;
+            istyp = 1;
+            ispch = 0;
             break;
         case 04240:
             fwprintf(dvc,L"0000 - READY\n");
             break;
         case 0600:
+        case 0607:
             if (dvc != NULL)
                 fclose(dvc);
             dvc = fopen("prt.out","w+");
             dvcstatus = 1;
+            istyp = 0;
+            ispch = 0;
             if (dvc == NULL) {
                 set(DW,zr0);
             } else {
@@ -1467,11 +1536,9 @@ void op_exc(void)
             break;
         case 0605:
             fprintf(dvc,"INFO ### A ");
-            for(int i=0;i<RS;i++)
-                fprintf(dvc,"%d",A[i]);
+            fprintf(dvc,"%d\n",to_num(A,12));
             fprintf(dvc,"### P ");
-            for(int i=0;i<RS;i++)
-                fprintf(dvc,"%d",P[i]);
+            fprintf(dvc,"%d",to_num(P,12));
             fprintf(dvc,"\n");
             fprintf(dvc,"\n");
             fprintf(dvc,"\n");
@@ -1498,6 +1565,8 @@ void op_exf(void)
             if (dvc != NULL)
                 fclose(dvc);
             dvc = fopen("ptpch.out","w");
+            istyp = 0;
+            ispch = 1;
             dvcstatus = 0;
             break;
         case 04220:
@@ -1506,6 +1575,8 @@ void op_exf(void)
                 fclose(dvc);
             dvc = fopen("typewriter","a+");
             dvcstatus = 0;
+            istyp = 1;
+            ispch = 0;
             break;
         case 0600:
         case 0607:
@@ -1513,6 +1584,8 @@ void op_exf(void)
                 fclose(dvc);
             dvc = fopen("prt.out","w+");
             dvcstatus = 1;
+            istyp = 0;
+            ispch = 0;
             if (dvc == NULL) {
                 set(DW,zr0);
             } else {
@@ -1530,11 +1603,9 @@ void op_exf(void)
             break;
         case 0605:
             fprintf(dvc,"INFO ### A ");
-            for(int i=0;i<RS;i++)
-                fprintf(dvc,"%d",A[i]);
+            fprintf(dvc,"%d\n",to_num(A,12));
             fprintf(dvc,"### P ");
-            for(int i=0;i<RS;i++)
-                fprintf(dvc,"%d",P[i]);
+            fprintf(dvc,"%d",to_num(P,12));
             fprintf(dvc,"\n");
             fprintf(dvc,"\n");
             fprintf(dvc,"\n");
