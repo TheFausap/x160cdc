@@ -179,13 +179,14 @@ int* rdd(FILE* d)
             v -= 60;
         }
         v = typ161i[v];
-    } else {
+    } else if (ispta) {
         v = pch11i[v];
     }
     
     while(v!=0) {
         t[i] = v%2;
         v /= 2;
+        i--;
     }
     
     return t;
@@ -196,6 +197,7 @@ void wrd(FILE* d, int* s)
 {
     wchar_t c;
     
+    
     c = to_num(s,12);
     if (typ161[c] == 370) {
         UC = 70;
@@ -203,8 +205,10 @@ void wrd(FILE* d, int* s)
         UC = 0;
     } else if (istyp) {
         fwprintf(d,L"%lc", typ161[UC+c]);
-    } else {
+    } else if (ispch) {
         fprintf(d,"%c",pch11[c]);
+    } else {
+        fwprintf(d,L"%lc", typ161[UC+c]);
     }
     fflush(d);
 }
