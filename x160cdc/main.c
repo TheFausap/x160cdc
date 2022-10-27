@@ -18,6 +18,8 @@ int BFR_busy = 0;
 int dvcstatus = 0;
 int ispch = 0;
 int istyp = 0;
+int ispta = 0;
+int isprt = 0;
 
 int* A;
 int* Z;
@@ -57,8 +59,11 @@ int sw4;
 int UC = 0;
 
 FILE* tape;
-FILE* prt;
+FILE* typwr;
 FILE* ptape;
+FILE* ptpch;
+
+FILE* prt;
 
 FILE* dvc;
 
@@ -91,6 +96,7 @@ wchar_t pch11[] = {  0,   '1', '2', '3', '4', '5', '6',  '7',  '8', '9', // 0
 };
 
 int typ161i[371] = { 0, };
+int pch11i[127] = { 0, };
 
 void _set(int* d, int s)
 {
@@ -162,24 +168,25 @@ int* rdd(FILE* d)
 {
     int* t;
     int v;
+    int i = RS-1;
     
-    t=calloc(12,sizeof(int));
-    for(int i=0;i<RS;i++) {
-        t[i] = fgetc(d)-'0';
-    }
+    t = calloc(12,sizeof(int));
     
-    v = to_num(t,12);
+    v = fgetc(d);
+    
     if (istyp) {
         if (v > 61) {
             v -= 60;
         }
-        
         v = typ161i[v];
     } else {
-        v = pch11[v];
+        v = pch11i[v];
     }
     
-    _set(t,v);
+    while(v!=0) {
+        t[i] = v%2;
+        v /= 2;
+    }
     
     return t;
 }
@@ -337,6 +344,55 @@ void init(void)
     typ161i['\n'] = 045;
     typ161i[370] = 047;
     
+    pch11i['0'] = 012;
+    pch11i['1'] = 1;
+    pch11i['2'] = 2;
+    pch11i['3'] = 3;
+    pch11i['4'] = 4;
+    pch11i['5'] = 5;
+    pch11i['6'] = 6;
+    pch11i['7'] = 7;
+    pch11i['8'] = 010;
+    pch11i['9'] = 011;
+    pch11i['='] = 013;
+    pch11i['_'] = 014;
+    pch11i['+'] = 060;
+    pch11i['A'] = 061;
+    pch11i['B'] = 062;
+    pch11i['C'] = 063;
+    pch11i['D'] = 064;
+    pch11i['E'] = 065;
+    pch11i['F'] = 066;
+    pch11i['G'] = 067;
+    pch11i['H'] = 070;
+    pch11i['I'] = 071;
+    pch11i['.'] = 073;
+    pch11i[')'] = 074;
+    pch11i['-'] = 040;
+    pch11i['J'] = 041;
+    pch11i['K'] = 042;
+    pch11i['L'] = 043;
+    pch11i['M'] = 044;
+    pch11i['N'] = 045;
+    pch11i['O'] = 046;
+    pch11i['P'] = 047;
+    pch11i['Q'] = 050;
+    pch11i['R'] = 051;
+    pch11i['$'] = 053;
+    pch11i['*'] = 054;
+    pch11i[' '] = 020;
+    pch11i['/'] = 021;
+    pch11i['S'] = 022;
+    pch11i['T'] = 023;
+    pch11i['U'] = 024;
+    pch11i['V'] = 025;
+    pch11i['W'] = 026;
+    pch11i['X'] = 027;
+    pch11i['Y'] = 030;
+    pch11i['Z'] = 031;
+    pch11i[','] = 033;
+    pch11i['('] = 034;
+    
     pa = fopen("config.ini","r");
     
     if (pa == NULL) {
@@ -350,19 +406,19 @@ void init(void)
             (fgetc(pa)-'0');
         _set(A,t);
         // reading B
-        fgetc(pa);
+        fgetc(pa); // space
         B = fgetc(pa)-'0';
         //reading I
-        fgetc(pa);
+        fgetc(pa); // space
         I = fgetc(pa)-'0';
         // reading R
-        fgetc(pa);
+        fgetc(pa); //space
         R = fgetc(pa)-'0';
         // reading D
-        fgetc(pa);
+        fgetc(pa); //space
         D = fgetc(pa)-'0';
         // reading P
-        fgetc(pa);
+        fgetc(pa); // space
         t = (fgetc(pa)-'0')*512 + (fgetc(pa)-'0')*64 + (fgetc(pa)-'0')*8 +
             (fgetc(pa)-'0');
         _set(P,t);
@@ -1447,32 +1503,73 @@ void op_inp(void)
 {
     int fwa = 0;
     int lwa = 0;
-    
+    int dv = (isprt << 3)|(ispta << 2)|(ispch << 1)|istyp;
     int ad = 0;
+    
     ad = to_num(P,12) + to_num(E,6) - 1;
     ad %= 07777;
     
     fwa = to_num(mem[R][ad],12);
     lwa = to_num(G,12);
-    for(int i=fwa;i<=lwa;i++) {
+    
+    switch(dv) {
+        case 1:
+            dvc = typwr;
+            break;
+        case 2:
+            dvc = ptpch;
+            break;
+        case 4:
+            dvc = ptape;
+            break;
+        case 8:
+            dvc = prt;
+            break;
+        default:
+            break;
+    }
+    
+    for(int i=fwa;i<lwa;i++) {
         set(mem[I][i],rdd(dvc));
     }
+    _set(A,lwa);
+    fflush(dvc);
 }
 
 void op_out(void)
 {
     int fwa = 0;
     int lwa = 0;
-    
     int ad = 0;
+    int dv = (isprt << 3)|(ispta << 2)|(ispch << 1)|istyp;
+    
     ad = to_num(P,12) + to_num(E,6) - 1;
     ad %= 07777;
     
     fwa = to_num(mem[R][ad],12);
     lwa = to_num(G,12);
-    for(int i=fwa;i<=lwa;i++) {
+    
+    switch(dv) {
+        case 1:
+            dvc = typwr;
+            break;
+        case 2:
+            dvc = ptpch;
+            break;
+        case 4:
+            dvc = ptape;
+            break;
+        case 8:
+            dvc = prt;
+            break;
+        default:
+            break;
+    }
+    
+    for(int i=fwa;i<lwa;i++) {
         wrd(dvc,mem[I][i]);
     }
+    _set(A,lwa);
     fflush(dvc);
 }
 
@@ -1482,136 +1579,88 @@ void op_otn(void)
     cpl(EE,E);
     wrd(dvc,EE);
 }
-            
-void op_exc(void)
+
+void _opend(int* d)
 {
     int ret[] = {1,0,0,0,0,0,0,0,0,0,0,0}; // 4000
     
-    switch(to_num(G,12)) {
+    switch(to_num(d,12)) {
         case 04102:
-            if (dvc != NULL)
-                fclose(dvc);
-            dvc = fopen("ptrdr.in","r");
+            if (ptape == NULL)
+                ptape = fopen("ptrdr.in","rb");
             dvcstatus = 0;
+            istyp = 0;
+            ispch = 0;
+            ispta = 1;
+            isprt = 0;
             break;
         case 04104:
-            if (dvc != NULL)
-                fclose(dvc);
-            dvc = fopen("ptpch.out","w");
+            if (ptpch == NULL)
+                ptpch = fopen("ptpch.out","ab+");
             dvcstatus = 0;
             istyp = 0;
             ispch = 1;
+            ispta = 0;
+            isprt = 0;
             break;
         case 04220:
         case 04210:
-            if (dvc != NULL)
-                fclose(dvc);
-            dvc = fopen("typewriter","w+");
+            if (typwr == NULL)
+                typwr = fopen("typewriter","w+");
             dvcstatus = 0;
             istyp = 1;
             ispch = 0;
+            ispta = 0;
+            isprt = 0;
             break;
         case 04240:
-            fwprintf(dvc,L"0000 - READY\n");
+            fwprintf(typwr,L"0000 - READY\n");
             break;
         case 0600:
         case 0607:
-            if (dvc != NULL)
-                fclose(dvc);
-            dvc = fopen("prt.out","w+");
+            if (prt == NULL)
+                prt = fopen("prt.out","w+");
             dvcstatus = 1;
             istyp = 0;
             ispch = 0;
-            if (dvc == NULL) {
+            ispta = 0;
+            isprt = 1;
+            if (prt == NULL) {
                 set(DW,zr0);
             } else {
                 set(DW,ret);
             }
             break;
         case 0601:
-            fprintf(dvc,"\n");
+            fprintf(prt,"\n");
             break;
         case 0602:
-            fprintf(dvc,"\n\n");
+            fprintf(prt,"\n\n");
             break;
         case 0605:
-            fprintf(dvc,"INFO ### A ");
-            fprintf(dvc,"%d\n",to_num(A,12));
-            fprintf(dvc,"### P ");
-            fprintf(dvc,"%d",to_num(P,12));
-            fprintf(dvc,"\n");
-            fprintf(dvc,"\n");
-            fprintf(dvc,"\n");
+            fprintf(prt,"INFO ### A ");
+            fprintf(prt,"%d\n",to_num(A,12));
+            fprintf(prt,"### P ");
+            fprintf(prt,"%d",to_num(P,12));
+            fprintf(prt,"\n");
+            fprintf(prt,"\n");
+            fprintf(prt,"\n");
         default:
             break;
     }
 }
 
+void op_exc(void)
+{
+    _opend(G);
+}
+
 void op_exf(void)
 {
-    int ret[] = {1,0,0,0,0,0,0,0,0,0,0,0}; // 4000
     int ad = to_num(P,12);
     
     ad += to_num(E,6);
-    
-    switch(to_num(mem[R][ad],12)) {
-        case 04102:
-            if (dvc != NULL)
-                fclose(dvc);
-            dvc = fopen("ptrdr.in","r");
-            dvcstatus = 0;
-            break;
-        case 04104:
-            if (dvc != NULL)
-                fclose(dvc);
-            dvc = fopen("ptpch.out","w");
-            istyp = 0;
-            ispch = 1;
-            dvcstatus = 0;
-            break;
-        case 04220:
-        case 04210:
-            if (dvc != NULL)
-                fclose(dvc);
-            dvc = fopen("typewriter","a+");
-            dvcstatus = 0;
-            istyp = 1;
-            ispch = 0;
-            break;
-        case 0600:
-        case 0607:
-            if (dvc != NULL)
-                fclose(dvc);
-            dvc = fopen("prt.out","w+");
-            dvcstatus = 1;
-            istyp = 0;
-            ispch = 0;
-            if (dvc == NULL) {
-                set(DW,zr0);
-            } else {
-                set(DW,ret);
-            }
-            break;
-        case 04240:
-            fwprintf(dvc,L"0000 - READY\n");
-            break;
-        case 0601:
-            fprintf(dvc,"\n");
-            break;
-        case 0602:
-            fprintf(dvc,"\n\n");
-            break;
-        case 0605:
-            fprintf(dvc,"INFO ### A ");
-            fprintf(dvc,"%d\n",to_num(A,12));
-            fprintf(dvc,"### P ");
-            fprintf(dvc,"%d",to_num(P,12));
-            fprintf(dvc,"\n");
-            fprintf(dvc,"\n");
-            fprintf(dvc,"\n");
-        default:
-            break;
-    }
+    _opend(mem[R][ad]);
 }
 
 void op_sls(void)
@@ -2626,6 +2675,7 @@ void ldmp(const char* fn)
         else if (c == '@') {
             BOP = (fgetc(f)-'0') * 512 + (fgetc(f)-'0') * 64 +
             (fgetc(f)-'0') * 8 + (fgetc(f)-'0');
+            _set(P,BOP);
         }
         else if ((c != ' ') && (c != '\n')) {
             mem[bl][org+j][i] = c - '0';
@@ -2640,7 +2690,7 @@ void ldmp(const char* fn)
             }
         }
     }
-    _set(P,BOP);
+    
     printf("\nP set to %04o",to_num(P,12));
     printf("\nLoading completed.\n\n");
 }
